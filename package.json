@@ -9,7 +9,7 @@
     "dev:server": "node --import tsx server/index.ts",
     "build": "npm run build:frontend && npm run build:server",
     "build:frontend": "vite build",
-    "build:server": "NODE_OPTIONS=--max-old-space-size=2048 tsc -p tsconfig.server.json",
+    "build:server": "tsc -p tsconfig.server.json",
     "start": "NODE_ENV=production node dist/server/server/index.js",
     "lint": "eslint .",
     "preview": "vite preview",

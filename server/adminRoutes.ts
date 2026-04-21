@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
-import prisma from './db';
-import { authenticate, authorizeRole } from './auth';
+import prisma from './db.js';
+import { authenticate, authorizeRole } from './auth.js';
 
 const router = express.Router();
 
@@ -65,7 +65,7 @@ router.get('/users', async (req, res) => {
             include: { branch: true }
         });
         // Remove sensitive data
-        const safeUsers = users.map(({ passwordHash, mfaSecret, ...u }) => u);
+        const safeUsers = users.map(({ passwordHash, mfaSecret, ...u }: any) => u);
         res.json(safeUsers);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch users' });

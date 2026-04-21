@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt, { SignOptions, Secret } from 'jsonwebtoken';
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
-import prisma from './db';
+import prisma from './db.js';
 
 const router = express.Router();
 const JWT_SECRET: Secret = process.env.JWT_SECRET || 'secret';

@@ -7,7 +7,7 @@ console.log('Core imports OK');
 import { PrismaClient } from '@prisma/client';
 console.log('Prisma import OK');
 
-import { uploadMerchantDocs, listRequestFiles } from './driveService';
+import { uploadMerchantDocs, listRequestFiles } from './driveService.js';
 console.log('Drive Service import OK');
 
 const app = express();

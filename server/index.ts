@@ -2,10 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import dotenv from 'dotenv';
-import { uploadMerchantDocs, listRequestFiles } from './driveService';
-import prisma from './db';
-import authRouter, { authenticate, authorizeRole } from './auth';
-import adminRouter from './adminRoutes';
+import { uploadMerchantDocs, listRequestFiles } from './driveService.js';
+import prisma from './db.js';
+import authRouter, { authenticate, authorizeRole } from './auth.js';
+import adminRouter from './adminRoutes.js';
 
 dotenv.config();
 
