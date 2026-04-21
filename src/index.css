@@ -1,0 +1,324 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900;1000&display=swap');
+@import "tailwindcss";
+
+:root {
+  font-family: 'Cairo', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: #0f172a;
+  background-color: #f8fafc;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@theme {
+  --color-brand-primary: #1a365d;
+  --color-brand-secondary: #2c5282;
+  --color-status-pending: #ecc94b;
+  --color-status-activated: #10b981;
+  --color-status-rejected: #ef4444;
+  --color-status-returned: #f97316;
+  --color-status-breached: #ef4444;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #0f172a;
+  direction: rtl;
+  text-align: right;
+}
+
+/* RTL Helpers for Tailwind v4 */
+.rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* ===================================================
+   PRINTABLE REPORT - Hidden on screen, shown on print
+   =================================================== */
+
+/* Hide report on screen */
+.printable-report {
+  display: none;
+}
+
+/* ===================================================
+   PRINT STYLES
+   =================================================== */
+@media print {
+  /* Page setup */
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
+
+  /* Step 1: Hide EVERYTHING */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Step 2: Show ONLY the printable report and all its children */
+  .printable-report,
+  .printable-report * {
+    visibility: visible !important;
+  }
+
+  /* Step 3: Make the report display and fill the page */
+  .printable-report {
+    display: block !important;
+    position: fixed !important;
+    top: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    z-index: 99999;
+    background: white !important;
+    font-family: 'Cairo', sans-serif !important;
+    font-size: 10pt;
+    color: #1e293b;
+    line-height: 1.6;
+    direction: rtl;
+    text-align: right;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* === REPORT HEADER === */
+  .report-header {
+    margin-bottom: 20px;
+  }
+
+  .report-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .report-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .report-logo-img {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .report-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .report-subtitle {
+    font-size: 8pt;
+    color: #94a3b8;
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .report-meta {
+    text-align: left;
+    font-size: 8pt;
+    color: #64748b;
+    line-height: 1.8;
+  }
+
+  .report-meta .report-id {
+    font-weight: 700;
+    color: #0f172a;
+    font-family: monospace;
+    font-size: 7pt;
+    margin-top: 4px;
+    padding: 2px 6px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .report-divider {
+    height: 3px;
+    background: linear-gradient(to left, #1e40af, #3b82f6, #93c5fd);
+    border-radius: 2px;
+  }
+
+  /* === MERCHANT BANNER === */
+  .report-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+  }
+
+  .report-merchant-name {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .report-merchant-name-en {
+    font-size: 9pt;
+    color: #64748b;
+    margin: 2px 0 0 0;
+  }
+
+  .report-status-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 16px;
+    min-width: 100px;
+  }
+
+  .report-status-label {
+    font-size: 7pt;
+    color: #94a3b8;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .report-status-value {
+    font-size: 10pt;
+    font-weight: 800;
+    color: #1e40af;
+  }
+
+  /* === SECTIONS === */
+  .report-section {
+    margin-bottom: 18px;
+    page-break-inside: avoid;
+  }
+
+  .report-section-highlight {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .report-section-title {
+    font-size: 12pt;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 6px;
+  }
+
+  .report-section-bullet {
+    width: 4px;
+    height: 20px;
+    border-radius: 2px;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  .report-section-bullet.blue { background: #2563eb; }
+  .report-section-bullet.amber { background: #f59e0b; }
+  .report-section-bullet.dark { background: #1e293b; }
+  .report-section-bullet.green { background: #10b981; }
+  .report-section-bullet.purple { background: #8b5cf6; }
+
+  /* === TABLES === */
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+  }
+
+  .report-cell-label {
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 8pt;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    width: 20%;
+    vertical-align: top;
+  }
+
+  .report-cell-value {
+    color: #0f172a;
+    font-weight: 600;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    width: 30%;
+    vertical-align: top;
+  }
+
+  .report-cell-mono {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  /* Striped history table */
+  .report-table-striped .report-th {
+    background: #1e293b;
+    color: white;
+    font-weight: 700;
+    font-size: 8pt;
+    padding: 8px 10px;
+    border: 1px solid #1e293b;
+    text-align: right;
+  }
+
+  .report-table-striped .report-td {
+    padding: 7px 10px;
+    border: 1px solid #e2e8f0;
+    font-size: 8pt;
+    color: #334155;
+    vertical-align: top;
+  }
+
+  .report-table-striped tbody tr:nth-child(even) {
+    background: #f8fafc;
+  }
+
+  /* === FOOTER === */
+  .report-footer {
+    margin-top: 30px;
+    page-break-inside: avoid;
+  }
+
+  .report-footer-line {
+    height: 2px;
+    background: #e2e8f0;
+    margin-bottom: 8px;
+  }
+
+  .report-footer-content {
+    display: flex;
+    justify-content: space-between;
+    font-size: 7pt;
+    color: #94a3b8;
+  }
+
+  /* === GENERAL PRINT OVERRIDES === */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

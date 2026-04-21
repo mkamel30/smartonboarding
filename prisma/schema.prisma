@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ────────── الأدوار ──────────
+enum UserRole {
+  ADMIN
+  BRANCH_SALES
+  BRANCH_SUPERVISOR
+  BRANCH_MANAGER
+  OPERATIONS
+  MANAGEMENT
+}
+
+// ────────── الفروع ──────────
+model Branch {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  governorate String
+  address     String?
+  phone       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  requests    OnboardingRequest[]
+}
+
+// ────────── المستخدمون ──────────
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  fullName     String
+  role         UserRole
+  isActive     Boolean  @default(true)
+  branchId     String?
+  branch       Branch?  @relation(fields: [branchId], references: [id])
+
+  // MFA (TOTP)
+  mfaEnabled   Boolean  @default(false)
+  mfaSecret    String?              // TOTP secret (encrypted)
+  mfaVerified  Boolean  @default(false) // تم التفعيل والتحقق بنجاح
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdRequests  OnboardingRequest[] @relation("CreatedBy")
+  historyEntries   StageHistory[]      @relation("ChangedByUser")
+}
+
+// ────────── طلبات التهيئة ──────────
+model OnboardingRequest {
+  id                   String   @id @default(cuid())
+  merchantNameAr       String
+  merchantNameEn       String?
+  governorate          String?
+  activityType         String?
+  serviceType          String?
+  customerCode         String?
+  machineType          String?
+  responsiblePerson    String?
+  address              String?
+  phone                String?
+  email                String?
+
+  // أرقام الهوية
+  commercialRegistryNo String?
+  taxCardNo            String?
+  licenseNo            String?
+  nationalIdNo         String?
+
+  // بيانات بنكية
+  iban                 String?
+  bankName             String?
+
+  // بيانات فنية
+  machineCode          String?
+  machineSerial        String?
+  cardsAcceptance      String?
+
+  // تعاقد
+  contractDate         String?
+  damanCode            String?
+
+  // ربط بالفرع والمستخدم المُنشئ
+  branchId             String
+  branch               Branch   @relation(fields: [branchId], references: [id])
+  createdById          String
+  createdBy            User     @relation("CreatedBy", fields: [createdById], references: [id])
+
+  // Workflow
+  stage                String   @default("Supervisor Review")
+  status               String   @default("Pending")
+  assignedTo           String   @default("System")
+  ownerRole            String   @default("BRANCH_SUPERVISOR")
+
+  // SLA
+  slaStartDate         DateTime @default(now())
+  slaTargetDays        Int      @default(3)
+
+  // Post-approval
+  merchantId           String?
+
+  // Drive
+  driveFolderId        String?
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  history              StageHistory[]
+}
+
+// ────────── سجل التدقيق ──────────
+model StageHistory {
+  id            String   @id @default(cuid())
+  requestId     String
+  fromStage     String
+  toStage       String
+  status        String
+  changedById   String
+  comment       String?
+  createdAt     DateTime @default(now())
+
+  request       OnboardingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  changedByUser User              @relation("ChangedByUser", fields: [changedById], references: [id])
+}
