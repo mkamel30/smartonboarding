@@ -1,13 +1,13 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions, Secret } from 'jsonwebtoken';
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import prisma from './db';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
+const JWT_SECRET: Secret = process.env.JWT_SECRET || 'secret';
+const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '8h') as string;
 const MFA_ISSUER = process.env.MFA_ISSUER || 'Merchant Onboarding';
 
 // --- MIDDLEWARE ---
@@ -77,7 +77,7 @@ router.post('/login', async (req, res) => {
             const tempToken = jwt.sign(
                 { id: user.id, mfaVerified: false },
                 JWT_SECRET,
-                { expiresIn: '5m' }
+                { expiresIn: '5m' } as SignOptions
             );
             return res.json({ mfaRequired: true, tempToken });
         }
@@ -85,7 +85,7 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign(
             { id: user.id, mfaVerified: false },
             JWT_SECRET,
-            { expiresIn: JWT_EXPIRES_IN }
+            { expiresIn: JWT_EXPIRES_IN } as SignOptions
         );
 
         const { passwordHash, mfaSecret, ...userSafe } = user;
@@ -122,7 +122,7 @@ router.post('/verify-mfa', async (req, res) => {
         const token = jwt.sign(
             { id: user.id, mfaVerified: true },
             JWT_SECRET,
-            { expiresIn: JWT_EXPIRES_IN }
+            { expiresIn: JWT_EXPIRES_IN } as SignOptions
         );
 
         const { passwordHash, mfaSecret, ...userSafe } = user;

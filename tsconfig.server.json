@@ -1,19 +1,12 @@
+{
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "es2023",
-    "lib": ["ES2023"],
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "outDir": "./dist/server",
-    "rootDir": "./server",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleDetection": "force",
-    "allowImportingTsExtensions": false,
-    "verbatimModuleSyntax": false,
+    "outDir": "dist/server",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "noEmit": false,
-    "types": ["node"]
+    "rootDir": "./"
   },
-  "include": ["server/**/*"]
+  "include": ["server/**/*"],
+  "exclude": ["server/debug_prisma.ts"]
 }
