@@ -136,7 +136,7 @@ const SubmissionPage: React.FC = () => {
         
         // Validation for mandatory files (only for new requests)
         if (!isEditMode) {
-            const mandatoryDocs = ['السجل التجاري', 'البطاقة الضريبية', 'البطاقة الشخصية'];
+            const mandatoryDocs = ['السجل التجاري', 'البطاقة الضريبية', 'البطاقة الشخصية', 'عقد الخدمة الموقّع'];
             const missingDocs = mandatoryDocs.filter(doc => !selectedFiles[doc]);
             
             if (missingDocs.length > 0) {
@@ -418,7 +418,11 @@ const SubmissionPage: React.FC = () => {
                     )}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {['السجل التجاري', 'البطاقة الضريبية', 'الرخصة', 'عقد الإيجار/الملكية', 'البطاقة الشخصية', 'التوكيل', 'بطاقة صاحب التوكيل'].map(doc => (
+                        {[
+                            'السجل التجاري', 'البطاقة الضريبية', 'البطاقة الشخصية', 
+                            'الرخصة', 'عقد الإيجار/الملكية', 'عقد الخدمة الموقّع',
+                            'التوكيل', 'بطاقة صاحب التوكيل'
+                        ].map(doc => (
                             <div
                                 key={doc}
                                 onClick={() => triggerFileInput(doc)}
@@ -427,12 +431,12 @@ const SubmissionPage: React.FC = () => {
                                 <div className="flex items-center justify-between">
                                     <div className="text-right flex-1 overflow-hidden">
                                         <p className="text-sm font-bold text-slate-700">
-                                            {doc} {['السجل التجاري', 'البطاقة الضريبية', 'البطاقة الشخصية'].includes(doc) && <span className="text-red-500">*</span>}
+                                            {doc} {['السجل التجاري', 'البطاقة الضريبية', 'البطاقة الشخصية', 'عقد الخدمة الموقّع'].includes(doc) && <span className="text-red-500">*</span>}
                                         </p>
                                         <p className="text-[10px] text-slate-400 truncate">
                                             {selectedFiles[doc] 
                                                 ? selectedFiles[doc].name 
-                                                : (['السجل التجاري', 'البطاقة الضريبية', 'البطاقة الشخصية'].includes(doc) ? 'اضغط لرفع الملف (إلزامي)' : 'رفع نسخة جديدة (اختياري)')
+                                                : (['السجل التجاري', 'البطاقة الضريبية', 'البطاقة الشخصية', 'عقد الخدمة الموقّع'].includes(doc) ? 'اضغط لرفع الملف (إلزامي)' : 'رفع نسخة جديدة (اختياري)')
                                             }
                                         </p>
                                     </div>

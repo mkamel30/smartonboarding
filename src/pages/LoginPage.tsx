@@ -59,8 +59,12 @@ const LoginPage: React.FC = () => {
             <div className="max-w-md w-full">
                 {/* Logo & Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 text-white rounded-3xl shadow-xl shadow-blue-200 mb-6">
-                        <ShieldCheck size={40} />
+                    <div className="mb-8">
+                        <img 
+                            src="/Smart-Logo-Horizontal.png" 
+                            alt="Smart Logo" 
+                            className="h-24 mx-auto object-contain"
+                        />
                     </div>
                     <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
                         {mfaRequired ? 'التحقق الثنائي' : 'تسجيل الدخول'}
