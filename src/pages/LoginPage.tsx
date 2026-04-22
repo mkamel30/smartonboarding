@@ -185,9 +185,6 @@ const LoginPage: React.FC = () => {
                     )}
                 </div>
 
-                <p className="mt-8 text-center text-slate-400 text-xs">
-                    نظام بنكي داخلي محمي - الوصول مقتصر على الموظفين المصرح لهم فقط
-                </p>
                 <p className="mt-2 text-center text-slate-300 text-[10px]">
                     v{new Date().getFullYear()}.4.21.PRO
                 </p>

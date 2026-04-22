@@ -5,7 +5,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmit": false,
-    "rootDir": "./"
+    "rootDir": "server"
   },
   "include": ["server/**/*"],
   "exclude": ["server/debug_prisma.ts"]
