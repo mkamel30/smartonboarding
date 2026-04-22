@@ -80,15 +80,38 @@ const RequestsTrackerPage: React.FC = () => {
                         onClick={() => {
                             if (filteredRequests) {
                                 exportToExcel(filteredRequests.map(r => ({
-                                    ID: r.id,
-                                    'Merchant (AR)': r.merchantNameAr,
-                                    'Merchant (EN)': r.merchantNameEn,
-                                    Branch: r.branch?.name,
-                                    Stage: r.stage,
-                                    Status: r.status,
-                                    SLA: r.slaTargetDays,
-                                    CreatedAt: r.createdAt
-                                })), `Requests_Data_${format(new Date(), 'yyyyMMdd')}`);
+                                    'رقم الطلب': r.id,
+                                    'اسم التاجر (عربي)': r.merchantNameAr,
+                                    'اسم التاجر (إنجليزي)': r.merchantNameEn,
+                                    'الفرع': r.branch?.name,
+                                    'المحافظة': r.governorate,
+                                    'نوع النشاط': r.activityType,
+                                    'نوع الخدمة': r.serviceType,
+                                    'كود العميل': r.customerCode,
+                                    'نوع الماكينة': r.machineType,
+                                    'الشخص المسؤول': r.responsiblePerson,
+                                    'العنوان': r.address,
+                                    'رقم الهاتف': r.phone,
+                                    'البريد الإلكتروني': r.email,
+                                    'رقم السجل التجاري': r.commercialRegistryNo,
+                                    'رقم البطاقة الضريبية': r.taxCardNo,
+                                    'رقم الرخصة': r.licenseNo,
+                                    'الرقم القومي': r.nationalIdNo,
+                                    'رقم الحساب (IBAN)': r.iban,
+                                    'اسم البنك': r.bankName,
+                                    'كود الماكينة': r.machineCode,
+                                    'سيريال الماكينة': r.machineSerial,
+                                    'قبول الكروت': r.cardsAcceptance,
+                                    'تاريخ التعاقد': r.contractDate,
+                                    'كود الضامن': r.damanCode,
+                                    'كود التاجر (Merchant ID)': r.merchantId,
+                                    'المرحلة': translateStage(r.stage),
+                                    'الحالة': translateStatus(r.status),
+                                    'المفوض إليه': r.assignedTo,
+                                    'دور المسؤول': r.ownerRole,
+                                    'تاريخ الإنشاء': format(new Date(r.createdAt), 'yyyy-MM-dd HH:mm'),
+                                    'تاريخ التحديث': format(new Date(r.updatedAt), 'yyyy-MM-dd HH:mm'),
+                                })), `Comprehensive_Requests_Data_${format(new Date(), 'yyyyMMdd')}`);
                             }
                         }}
                         className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm font-bold"
