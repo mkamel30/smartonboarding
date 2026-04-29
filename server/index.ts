@@ -326,6 +326,42 @@ apiRouter.get('/dashboard/stats', async (req: any, res) => {
     }
 });
 
+apiRouter.get('/pending-counts', async (req: any, res) => {
+    try {
+        const user = req.user;
+        let directCount = 0;
+        let shippingCount = 0;
+
+        // 1. Direct tasks (where user is the owner)
+        directCount = await prisma.onboardingRequest.count({
+            where: {
+                ownerRole: user.role,
+                status: 'Pending',
+                // If branch user, only see their branch
+                branchId: ['BRANCH_SALES', 'BRANCH_SUPERVISOR', 'BRANCH_MANAGER'].includes(user.role) ? user.branchId : undefined
+            }
+        });
+
+        // 2. Shipping tasks (For branch users: request moved forward but no waybill yet)
+        if (['BRANCH_SALES', 'BRANCH_SUPERVISOR', 'BRANCH_MANAGER'].includes(user.role)) {
+            shippingCount = await prisma.onboardingRequest.count({
+                where: {
+                    branchId: user.branchId,
+                    waybillNumber: null,
+                    // Stage has moved beyond Branch Management Review
+                    stage: {
+                        in: ['Sales Management Review', 'Operations Review', 'Bank Review', 'Software Activation', 'Completed']
+                    }
+                }
+            });
+        }
+
+        res.json({ directCount, shippingCount, total: directCount + shippingCount });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch pending counts' });
+    }
+});
+
 apiRouter.get('/activity', async (req: any, res) => {
     try {
         const user = req.user;

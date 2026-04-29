@@ -176,6 +176,11 @@ export const apiService = {
         return response.data;
     },
 
+    getPendingCounts: async () => {
+        const response = await api.get('/pending-counts');
+        return response.data;
+    },
+
     uploadDocs: async (formData: FormData) => {
         const response = await api.post('/upload', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },

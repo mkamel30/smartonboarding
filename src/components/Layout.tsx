@@ -16,6 +16,8 @@ import {
     Menu,
     X
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { apiService } from '../services/api';
 import NotificationBell from './NotificationBell';
 
 interface LayoutProps {
@@ -29,6 +31,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     const { t } = useTranslation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+    // Fetch pending counts
+    const { data: pendingCounts } = useQuery({
+        queryKey: ['pending-counts'],
+        queryFn: apiService.getPendingCounts,
+        refetchInterval: 30000, // Refresh every 30 seconds
+        enabled: !!user
+    });
+
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -36,10 +46,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     const navItems = [
         { name: t('dashboard'), path: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGEMENT', 'OPERATIONS', 'BRANCH_MANAGER', 'BRANCH_SUPERVISOR', 'BRANCH_SALES', 'BRANCH_MGMT', 'SALES_MGMT'] },
-        { name: t('requests_tracker'), path: '/requests', icon: FileText, roles: ['ADMIN', 'MANAGEMENT', 'OPERATIONS', 'BRANCH_MANAGER', 'BRANCH_SUPERVISOR', 'BRANCH_SALES', 'BRANCH_MGMT', 'SALES_MGMT'] },
+        { 
+            name: t('requests_tracker'), 
+            path: '/requests', 
+            icon: FileText, 
+            roles: ['ADMIN', 'MANAGEMENT', 'OPERATIONS', 'BRANCH_MANAGER', 'BRANCH_SUPERVISOR', 'BRANCH_SALES', 'BRANCH_MGMT', 'SALES_MGMT'],
+            badge: pendingCounts?.total > 0 ? pendingCounts.total : null
+        },
         { name: t('new_request'), path: '/submit', icon: PlusCircle, roles: ['ADMIN', 'BRANCH_SALES'] },
         { name: 'بواليص الشحن', path: '/batches', icon: Package, roles: ['ADMIN', 'MANAGEMENT', 'OPERATIONS', 'BRANCH_MANAGER', 'BRANCH_SUPERVISOR', 'BRANCH_SALES', 'BRANCH_MGMT'] },
-        { name: 'إرسال مستندات', path: '/shipment', icon: Send, roles: ['ADMIN', 'BRANCH_SALES', 'BRANCH_SUPERVISOR', 'BRANCH_MANAGER'] },
+        { 
+            name: 'إرسال مستندات', 
+            path: '/shipment', 
+            icon: Send, 
+            roles: ['ADMIN', 'BRANCH_SALES', 'BRANCH_SUPERVISOR', 'BRANCH_MANAGER'],
+            badge: pendingCounts?.shippingCount > 0 ? pendingCounts.shippingCount : null
+        },
         { name: 'إدارة النظام', path: '/admin', icon: Settings, roles: ['ADMIN'] },
         { name: 'الملف الشخصي', path: '/profile', icon: UserCircle, roles: ['ADMIN', 'MANAGEMENT', 'OPERATIONS', 'BRANCH_MANAGER', 'BRANCH_SUPERVISOR', 'BRANCH_SALES', 'BRANCH_MGMT', 'SALES_MGMT'] },
     ];
@@ -85,13 +107,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                                 key={item.path}
                                 to={item.path}
                                 onClick={() => setIsSidebarOpen(false)}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
+                                className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${isActive
                                     ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20'
                                     : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                                     }`}
                             >
-                                <Icon size={20} className="rtl-flip" />
-                                <span className="font-medium text-sm">{item.name}</span>
+                                <div className="flex items-center gap-3">
+                                    <Icon size={20} className="rtl-flip" />
+                                    <span className="font-medium text-sm">{item.name}</span>
+                                </div>
+                                
+                                {item.badge && (
+                                    <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
+                                        isActive ? 'bg-white text-blue-600' : 'bg-red-500 text-white animate-breathing'
+                                    }`}>
+                                        {item.badge}
+                                    </span>
+                                )}
                             </Link>
                         );
                     })}

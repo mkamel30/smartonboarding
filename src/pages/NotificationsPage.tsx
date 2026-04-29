@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { Bell, CheckCircle2, Package, ArrowRight, Check } from 'lucide-react';
+import { Bell, CheckCircle2, Package, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 
 const NotificationsPage: React.FC = () => {
@@ -39,7 +39,7 @@ const NotificationsPage: React.FC = () => {
         }
 
         if (notif.requestId) {
-            navigate(`/request/${notif.requestId}`);
+            navigate(`/details/${notif.requestId}`);
         } else if (notif.type.includes('BATCH')) {
             navigate('/batches');
         }
