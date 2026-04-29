@@ -30,7 +30,7 @@ export async function processAction(requestId, action, user, payload = {}) {
     const { kycType, formFileId, mid, bankResponse } = payload;
     switch (request.stage) {
         case WORKFLOW_STAGES.BRANCH_MGMT_REVIEW:
-            if (user.role !== ROLES.BRANCH_MGMT && user.role !== 'ADMIN')
+            if (user.role !== ROLES.BRANCH_MGMT && user.role !== 'BRANCH_SUPERVISOR' && user.role !== 'ADMIN')
                 throw new Error('Unauthorized');
             if (action === 'approve') {
                 if (!kycType)

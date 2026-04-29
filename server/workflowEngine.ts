@@ -41,7 +41,7 @@ export async function processAction(
 
     switch (request.stage) {
         case WORKFLOW_STAGES.BRANCH_MGMT_REVIEW:
-            if (user.role !== ROLES.BRANCH_MGMT && user.role !== 'ADMIN') throw new Error('Unauthorized');
+            if (user.role !== ROLES.BRANCH_MGMT && user.role !== 'BRANCH_SUPERVISOR' && user.role !== 'ADMIN') throw new Error('Unauthorized');
             
             if (action === 'approve') {
                 if (!kycType) throw new Error('KYC Type is required for approval');

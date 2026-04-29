@@ -540,7 +540,7 @@ const RequestDetailsPage: React.FC = () => {
                                 )}
 
                                 {/* --- 1. BRANCH MGMT REVIEW --- */}
-                                {(user?.role === 'BRANCH_MGMT' || user?.role === 'ADMIN') && request.stage === 'Branch Management Review' && (
+                                {(user?.role === 'BRANCH_MGMT' || user?.role === 'BRANCH_SUPERVISOR' || user?.role === 'ADMIN') && request.stage === 'Branch Management Review' && (
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-xs font-bold uppercase text-slate-400 mb-2">نوع التوثيق المطلق (إلزامي للموافقة)</label>
