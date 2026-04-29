@@ -1,29 +1,32 @@
 @echo off
-SETLOCAL
-echo [1/5] Adding PowerShell to PATH...
-set PATH=%PATH%;%SystemRoot%\system32\WindowsPowerShell\v1.0\
+echo ========================================
+echo 🚀 SMART ONBOARDING - PRODUCTION BUILD
+echo ========================================
 
-echo [2/5] Running Local Build (Please wait)...
+echo 1. Cleaning old build...
+if exist dist (rd /s /q dist)
+
+echo 2. Running production build...
 call npm run build
 
-if %errorlevel% neq 0 (
-    echo.
-    echo ERROR: Build failed. Please check for errors above.
+if %ERRORLEVEL% NEQ 0 (
+    echo ❌ Build failed! Please check errors.
     pause
-    exit /b %errorlevel%
+    exit /b %ERRORLEVEL%
 )
 
-echo [3/5] Adding changes to Git...
+echo 3. Staging changes...
 git add .
 
-echo [4/5] Committing changes...
-git commit -m "Update build and rename roles to Branches Management"
+echo 4. Committing changes...
+set msg="Final enhancements: Return-to-sender logic, breathing badges, and UI confirmations"
+git commit -m %msg%
 
-echo [5/5] Pushing to repository...
-git push
+echo 5. Pushing to GitHub...
+git push origin main
 
-echo.
-echo ==========================================
-echo Success! Build completed and pushed.
-echo ==========================================
+echo ========================================
+echo ✅ DONE! Changes are now on GitHub.
+echo 👉 Now run the update commands on your server.
+echo ========================================
 pause

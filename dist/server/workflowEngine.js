@@ -80,6 +80,7 @@ export async function processAction(requestId, action, user, payload = {}) {
                 updates.stage = WORKFLOW_STAGES.BRANCH_SUBMISSION;
                 updates.ownerRole = ROLES.BRANCH_SALES;
                 updates.status = 'Returned';
+                updates.returnToStage = WORKFLOW_STAGES.BRANCH_MGMT_REVIEW;
                 historyEntry.toStage = updates.stage;
                 historyEntry.status = 'Returned for Modification';
             }
@@ -109,6 +110,7 @@ export async function processAction(requestId, action, user, payload = {}) {
                 updates.stage = WORKFLOW_STAGES.BRANCH_SUBMISSION;
                 updates.ownerRole = ROLES.BRANCH_SALES;
                 updates.status = 'Returned';
+                updates.returnToStage = WORKFLOW_STAGES.SALES_MGMT_REVIEW;
                 historyEntry.toStage = updates.stage;
                 historyEntry.status = 'Returned for Modification';
             }
@@ -160,6 +162,7 @@ export async function processAction(requestId, action, user, payload = {}) {
                 updates.ownerRole = ROLES.BRANCH_SALES;
                 updates.bankResponse = 'modification';
                 updates.status = 'Returned';
+                updates.returnToStage = WORKFLOW_STAGES.OPERATIONS_REVIEW; // Go back to Operations to review changes before resending to bank
                 historyEntry.toStage = updates.stage;
                 historyEntry.status = 'Bank Modification Requested';
             }
@@ -181,14 +184,23 @@ export async function processAction(requestId, action, user, payload = {}) {
             if (user.role !== ROLES.BRANCH_SALES && user.role !== 'ADMIN')
                 throw new Error('Unauthorized');
             if (action === 'resubmit') {
-                if (request.returnToStage === WORKFLOW_STAGES.OPERATIONS_REVIEW) {
-                    updates.stage = WORKFLOW_STAGES.OPERATIONS_REVIEW;
-                    updates.ownerRole = ROLES.OPERATIONS;
+                const targetStage = request.returnToStage;
+                if (targetStage) {
+                    updates.stage = targetStage;
+                    // Determine owner role based on target stage
+                    if (targetStage === WORKFLOW_STAGES.BRANCH_MGMT_REVIEW)
+                        updates.ownerRole = ROLES.BRANCH_MGMT;
+                    else if (targetStage === WORKFLOW_STAGES.SALES_MGMT_REVIEW)
+                        updates.ownerRole = ROLES.SALES_MGMT;
+                    else if (targetStage === WORKFLOW_STAGES.OPERATIONS_REVIEW)
+                        updates.ownerRole = ROLES.OPERATIONS;
+                    else
+                        updates.ownerRole = ROLES.BRANCH_MGMT; // Default fallback
                     updates.returnToStage = null; // clear it
                 }
                 else {
                     updates.stage = WORKFLOW_STAGES.SUPERVISOR_REVIEW;
-                    updates.ownerRole = ROLES.BRANCH_SUPERVISOR;
+                    updates.ownerRole = 'BRANCH_SUPERVISOR';
                 }
                 updates.status = 'Submitted';
                 historyEntry.toStage = updates.stage;

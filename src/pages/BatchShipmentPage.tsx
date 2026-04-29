@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { Package, Send, CheckCircle2, FileText, Upload } from 'lucide-react';
+import { Package, Send, CheckCircle2, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 
 const BatchShipmentPage: React.FC = () => {
-    const { user } = useAuth();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     
@@ -140,7 +139,11 @@ const BatchShipmentPage: React.FC = () => {
 
                 <div className="pt-6 flex justify-end">
                     <button 
-                        onClick={() => createBatchMutation.mutate()}
+                        onClick={() => {
+                            if (window.confirm(`هل أنت متأكد من إرسال بوليصة الشحن رقم (${waybillNumber}) التي تحتوي على ${selectedRequests.length} طلب؟`)) {
+                                createBatchMutation.mutate();
+                            }
+                        }}
                         disabled={createBatchMutation.isPending || selectedRequests.length === 0 || !waybillNumber || !waybillFile}
                         className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center gap-2"
                     >

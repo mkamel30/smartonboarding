@@ -68,6 +68,8 @@ const AdminPage: React.FC = () => {
         const formData = new FormData(e.target as HTMLFormElement);
         const data = Object.fromEntries(formData.entries());
         
+        if (!window.confirm('هل أنت متأكد من حفظ بيانات هذا الفرع؟')) return;
+
         try {
             if (editingBranch?.id) {
                 await apiService.updateBranch(editingBranch.id, data);
@@ -83,6 +85,9 @@ const AdminPage: React.FC = () => {
     };
 
     const toggleBranchStatus = async (branch: Branch) => {
+        const msg = branch.isActive ? 'هل أنت متأكد من تعطيل هذا الفرع؟' : 'هل أنت متأكد من تفعيل هذا الفرع؟';
+        if (!window.confirm(msg)) return;
+
         try {
             await apiService.updateBranch(branch.id, { isActive: !branch.isActive });
             fetchData();
@@ -97,6 +102,8 @@ const AdminPage: React.FC = () => {
         const formData = new FormData(e.target as HTMLFormElement);
         const data = Object.fromEntries(formData.entries());
         
+        if (!window.confirm('هل أنت متأكد من حفظ بيانات هذا المستخدم؟')) return;
+
         try {
             if (editingUser?.id) {
                 await apiService.updateUser(editingUser.id, data);
@@ -112,6 +119,9 @@ const AdminPage: React.FC = () => {
     };
 
     const toggleUserStatus = async (user: User) => {
+        const msg = user.isActive ? 'هل أنت متأكد من تعطيل هذا المستخدم؟' : 'هل أنت متأكد من تفعيل هذا المستخدم؟';
+        if (!window.confirm(msg)) return;
+
         try {
             await apiService.updateUser(user.id, { isActive: !user.isActive });
             fetchData();

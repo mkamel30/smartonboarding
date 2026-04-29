@@ -146,6 +146,22 @@ const RequestDetailsPage: React.FC = () => {
             alert('يرجى كتابة تعليق يوضح السبب.');
             return;
         }
+
+        const actionLabels: any = {
+            'approve': 'موافقة وإرسال للمرحلة التالية',
+            'return': 'إرجاع الطلب للتعديل',
+            'reject': 'رفض الطلب نهائياً',
+            'send_to_bank': 'إرسال الطلب للبنك',
+            'bank_approved': 'تأكيد موافقة البنك وحفظ الـ MID',
+            'bank_rejected': 'تأكيد رفض البنك للطلب',
+            'bank_modification': 'طلب تعديل من البنك',
+            'confirm_activation': 'تأكيد تفعيل السوفتوير وتشغيل الماكينة',
+            'resubmit': 'إعادة تقديم الطلب بعد التعديل'
+        };
+
+        const confirmMsg = `هل أنت متأكد من تنفيذ إجراء: (${actionLabels[action] || action})؟`;
+        if (!window.confirm(confirmMsg)) return;
+
         actionMutation.mutate({ action, payload });
     };
 

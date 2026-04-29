@@ -144,8 +144,20 @@ const SubmissionPage: React.FC = () => {
                 return;
             }
         }
+
+        const confirmMsg = isEditMode 
+            ? 'هل أنت متأكد من حفظ التعديلات وإعادة تقديم الطلب؟' 
+            : 'هل أنت متأكد من تقديم طلب تهيئة التاجر الجديد؟';
+            
+        if (!window.confirm(confirmMsg)) return;
         
         mutation.mutate(data);
+    };
+
+    const handleCancel = () => {
+        if (window.confirm('هل أنت متأكد من إلغاء العملية؟ سيتم فقدان كافة البيانات غير المحفوظة.')) {
+            navigate('/requests');
+        }
     };
 
     const toggleServiceType = (service: string) => {
@@ -459,7 +471,7 @@ const SubmissionPage: React.FC = () => {
                 </section>
 
                 <div className="flex items-center justify-end gap-4">
-                    <button type="button" onClick={() => navigate('/requests')} className="px-6 py-3 font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                    <button type="button" onClick={handleCancel} className="px-6 py-3 font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
                         إلغاء
                     </button>
                     <button

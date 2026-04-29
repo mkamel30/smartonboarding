@@ -59,7 +59,11 @@ const NotificationsPage: React.FC = () => {
                 </div>
 
                 <button 
-                    onClick={() => markAllReadMutation.mutate()}
+                    onClick={() => {
+                        if (window.confirm('هل أنت متأكد من تحديد كافة الإشعارات كمقروءة؟')) {
+                            markAllReadMutation.mutate();
+                        }
+                    }}
                     disabled={markAllReadMutation.isPending || !notifications?.some((n: any) => !n.isRead)}
                     className="px-4 py-2 text-sm font-bold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50"
                 >
