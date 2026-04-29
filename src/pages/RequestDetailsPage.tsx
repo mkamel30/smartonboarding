@@ -539,8 +539,25 @@ const RequestDetailsPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* --- 1. BRANCH MGMT REVIEW --- */}
-                                {(user?.role === 'BRANCH_MGMT' || user?.role === 'BRANCH_SUPERVISOR' || user?.role === 'ADMIN') && request.stage === 'Branch Management Review' && (
+                                {/* --- 1. SUPERVISOR REVIEW --- */}
+                                {(user?.role === 'BRANCH_SUPERVISOR' || user?.role === 'BRANCH_MANAGER' || user?.role === 'ADMIN') && request.stage === 'Supervisor Review' && (
+                                    <div className="space-y-4">
+                                        <button
+                                            disabled={actionMutation.isPending}
+                                            onClick={() => doAction('approve')}
+                                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <CheckCircle size={20} /> موافقة وإرسال لإدارة الفروع
+                                        </button>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button onClick={() => doAction('return')} disabled={actionMutation.isPending} className="py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-700"><RotateCw size={18} /> إرجاع للفرع</button>
+                                            <button onClick={() => doAction('reject')} disabled={actionMutation.isPending} className="py-3 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white font-bold rounded-xl flex items-center justify-center gap-2 border border-red-600/30"><XCircle size={18} /> رفض الطلب</button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* --- 2. BRANCH MGMT REVIEW --- */}
+                                {(user?.role === 'BRANCH_MGMT' || user?.role === 'ADMIN') && request.stage === 'Branch Management Review' && (
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-xs font-bold uppercase text-slate-400 mb-2">نوع التوثيق المطلق (إلزامي للموافقة)</label>

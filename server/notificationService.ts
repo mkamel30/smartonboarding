@@ -21,7 +21,7 @@ export async function createNotification(data: {
     message: string;
     requestId?: string;
 }) {
-    return prisma.notification.create({
+    return (prisma as any).notification.create({
         data
     });
 }
@@ -46,7 +46,7 @@ export async function notifyRole(
         ...data
     }));
 
-    await prisma.notification.createMany({
+    await (prisma as any).notification.createMany({
         data: notifications
     });
 }
@@ -54,12 +54,12 @@ export async function notifyRole(
 export async function notifyWorkflowEvent(event: string, request: any, payload: any = {}) {
     switch (event) {
         case NOTIFICATION_TYPES.REQUEST_SUBMITTED:
-            await notifyRole('BRANCH_MGMT', {
+            await notifyRole('BRANCH_SUPERVISOR', {
                 type: event,
                 title: 'طلب جديد للمراجعة',
-                message: `تم تقديم طلب جديد (${request.id}) من فرع ${request.branch?.name || request.branchId}`,
+                message: `تم تقديم طلب جديد (${request.id}) من مسؤول مبيعات الفرع`,
                 requestId: request.id
-            });
+            }, request.branchId);
             break;
             
         case NOTIFICATION_TYPES.REQUEST_APPROVED_BMGMT:

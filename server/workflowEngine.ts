@@ -2,6 +2,7 @@ import prisma from './db.js';
 
 export const WORKFLOW_STAGES = {
     BRANCH_SUBMISSION: 'Branch Submission',
+    SUPERVISOR_REVIEW: 'Supervisor Review',
     BRANCH_MGMT_REVIEW: 'Branch Management Review',
     SALES_MGMT_REVIEW: 'Sales Management Review',
     OPERATIONS_REVIEW: 'Operations Review',
@@ -10,9 +11,9 @@ export const WORKFLOW_STAGES = {
     COMPLETED: 'Completed',
     CLOSED: 'Closed'
 };
-
 export const ROLES = {
     BRANCH_SALES: 'BRANCH_SALES',
+    BRANCH_SUPERVISOR: 'BRANCH_SUPERVISOR',
     BRANCH_MGMT: 'BRANCH_MGMT',
     SALES_MGMT: 'SALES_MGMT',
     OPERATIONS: 'OPERATIONS'
@@ -40,8 +41,31 @@ export async function processAction(
     const { kycType, formFileId, mid, bankResponse } = payload;
 
     switch (request.stage) {
+        case WORKFLOW_STAGES.SUPERVISOR_REVIEW:
+            if (user.role !== 'BRANCH_SUPERVISOR' && user.role !== 'BRANCH_MANAGER' && user.role !== 'ADMIN') throw new Error('Unauthorized');
+            
+            if (action === 'approve') {
+                updates.stage = WORKFLOW_STAGES.BRANCH_MGMT_REVIEW;
+                updates.ownerRole = ROLES.BRANCH_MGMT;
+                updates.status = 'Submitted';
+                historyEntry.toStage = updates.stage;
+                historyEntry.status = 'Approved by Branch Supervisor';
+            } else if (action === 'reject') {
+                updates.stage = WORKFLOW_STAGES.CLOSED;
+                updates.status = 'Rejected';
+                historyEntry.toStage = updates.stage;
+                historyEntry.status = 'Rejected by Supervisor';
+            } else if (action === 'return') {
+                updates.stage = WORKFLOW_STAGES.BRANCH_SUBMISSION;
+                updates.ownerRole = ROLES.BRANCH_SALES;
+                updates.status = 'Returned';
+                historyEntry.toStage = updates.stage;
+                historyEntry.status = 'Returned for Modification';
+            }
+            break;
+
         case WORKFLOW_STAGES.BRANCH_MGMT_REVIEW:
-            if (user.role !== ROLES.BRANCH_MGMT && user.role !== 'BRANCH_SUPERVISOR' && user.role !== 'ADMIN') throw new Error('Unauthorized');
+            if (user.role !== ROLES.BRANCH_MGMT && user.role !== 'ADMIN') throw new Error('Unauthorized');
             
             if (action === 'approve') {
                 if (!kycType) throw new Error('KYC Type is required for approval');
@@ -162,13 +186,13 @@ export async function processAction(
             if (user.role !== ROLES.BRANCH_SALES && user.role !== 'ADMIN') throw new Error('Unauthorized');
             
             if (action === 'resubmit') {
-                if (request.returnToStage === WORKFLOW_STAGES.OPERATIONS_REVIEW) {
+                if ((request as any).returnToStage === WORKFLOW_STAGES.OPERATIONS_REVIEW) {
                     updates.stage = WORKFLOW_STAGES.OPERATIONS_REVIEW;
                     updates.ownerRole = ROLES.OPERATIONS;
                     updates.returnToStage = null; // clear it
                 } else {
-                    updates.stage = WORKFLOW_STAGES.BRANCH_MGMT_REVIEW;
-                    updates.ownerRole = ROLES.BRANCH_MGMT;
+                    updates.stage = WORKFLOW_STAGES.SUPERVISOR_REVIEW;
+                    updates.ownerRole = ROLES.BRANCH_SUPERVISOR;
                 }
                 updates.status = 'Submitted';
                 historyEntry.toStage = updates.stage;

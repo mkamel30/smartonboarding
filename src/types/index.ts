@@ -11,6 +11,7 @@ export type RequestStatus =
 
 export type RequestStage = 
   | 'Branch Submission'
+  | 'Supervisor Review'
   | 'Branch Management Review'
   | 'Sales Management Review'
   | 'Operations Review'

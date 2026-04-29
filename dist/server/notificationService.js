@@ -37,12 +37,12 @@ export async function notifyRole(role, data, branchId) {
 export async function notifyWorkflowEvent(event, request, payload = {}) {
     switch (event) {
         case NOTIFICATION_TYPES.REQUEST_SUBMITTED:
-            await notifyRole('BRANCH_MGMT', {
+            await notifyRole('BRANCH_SUPERVISOR', {
                 type: event,
                 title: 'طلب جديد للمراجعة',
-                message: `تم تقديم طلب جديد (${request.id}) من فرع ${request.branch?.name || request.branchId}`,
+                message: `تم تقديم طلب جديد (${request.id}) من مسؤول مبيعات الفرع`,
                 requestId: request.id
-            });
+            }, request.branchId);
             break;
         case NOTIFICATION_TYPES.REQUEST_APPROVED_BMGMT:
             // Notify branch sales who created it

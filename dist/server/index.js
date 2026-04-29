@@ -8,7 +8,7 @@ import authRouter, { authenticate, authorizeRole } from './auth.js';
 import adminRouter from './adminRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 import batchRoutes from './batchRoutes.js';
-import { processAction, ROLES, WORKFLOW_STAGES } from './workflowEngine.js';
+import { processAction, WORKFLOW_STAGES } from './workflowEngine.js';
 import { notifyWorkflowEvent, NOTIFICATION_TYPES } from './notificationService.js';
 dotenv.config();
 const app = express();
@@ -184,18 +184,18 @@ apiRouter.post('/requests', authorizeRole('BRANCH_SALES', 'ADMIN'), async (req, 
                 id: requestId,
                 branchId: user.branchId || data.branchId,
                 createdById: user.id,
-                stage: WORKFLOW_STAGES.BRANCH_MGMT_REVIEW,
+                stage: WORKFLOW_STAGES.SUPERVISOR_REVIEW,
                 status: 'Pending',
-                ownerRole: ROLES.BRANCH_MGMT,
+                ownerRole: 'BRANCH_SUPERVISOR',
                 slaStartDate: new Date(),
                 slaTargetDays: 3,
                 history: {
                     create: {
                         fromStage: 'Creation',
-                        toStage: WORKFLOW_STAGES.BRANCH_MGMT_REVIEW,
+                        toStage: WORKFLOW_STAGES.SUPERVISOR_REVIEW,
                         status: 'Pending',
                         changedById: user.id,
-                        comment: 'تم إنشاء الطلب وتقديمه لمراجعة إدارة الفروع',
+                        comment: 'تم إنشاء الطلب وتقديمه لمراجعة مشرف الفرع',
                         createdAt: new Date()
                     }
                 }

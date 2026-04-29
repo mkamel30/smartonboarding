@@ -212,18 +212,18 @@ apiRouter.post('/requests', authorizeRole('BRANCH_SALES', 'ADMIN'), async (req: 
                 id: requestId,
                 branchId: user.branchId || data.branchId,
                 createdById: user.id,
-                stage: WORKFLOW_STAGES.BRANCH_MGMT_REVIEW,
+                stage: WORKFLOW_STAGES.SUPERVISOR_REVIEW,
                 status: 'Pending',
-                ownerRole: ROLES.BRANCH_MGMT,
+                ownerRole: 'BRANCH_SUPERVISOR',
                 slaStartDate: new Date(),
                 slaTargetDays: 3,
                 history: {
                     create: {
                         fromStage: 'Creation',
-                        toStage: WORKFLOW_STAGES.BRANCH_MGMT_REVIEW,
+                        toStage: WORKFLOW_STAGES.SUPERVISOR_REVIEW,
                         status: 'Pending',
                         changedById: user.id,
-                        comment: 'تم إنشاء الطلب وتقديمه لمراجعة إدارة الفروع',
+                        comment: 'تم إنشاء الطلب وتقديمه لمراجعة مشرف الفرع',
                         createdAt: new Date()
                     }
                 }
