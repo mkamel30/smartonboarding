@@ -393,11 +393,12 @@ const AdminPage: React.FC = () => {
                                     <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">الدور الوظيفي</label>
                                     <select name="role" required defaultValue={editingUser?.role || 'BRANCH_SALES'} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
                                         <option value="ADMIN">مدير نظام (Admin)</option>
-                                        <option value="BRANCH_SALES">مسئول مبيعات (Sales)</option>
-                                        <option value="BRANCH_SUPERVISOR">مشرف خدمة عملاء (Supervisor)</option>
-                                        <option value="BRANCH_MANAGER">مدير فرع (Manager)</option>
-                                        <option value="OPERATIONS">إدارة العمليات (Ops)</option>
-                                        <option value="MANAGEMENT">الإدارة العليا (Mgmt)</option>
+                                        <option value="BRANCH_SALES">مسؤول مبيعات (Sales)</option>
+                                        <option value="BRANCH_SUPERVISOR">مشرف الفرع (Supervisor)</option>
+                                        <option value="BRANCH_MANAGER">مدير الفرع (Branch Manager)</option>
+                                        <option value="OPERATIONS">إدارة الفروع (Branches Management)</option>
+                                        <option value="SALES_MGMT">إدارة المبيعات (Sales Management)</option>
+                                        <option value="MANAGEMENT">الإدارة العليا (Management)</option>
                                     </select>
                                 </div>
                                 <div>

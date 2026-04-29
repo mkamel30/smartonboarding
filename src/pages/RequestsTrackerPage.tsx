@@ -52,7 +52,7 @@ const RequestsTrackerPage: React.FC = () => {
             'Supervisor Review': 'مراجعة مشرف الفرع',
             'Branch Management Review': 'مراجعة إدارة الفروع',
             'Sales Management Review': 'مراجعة إدارة المبيعات',
-            'Operations Review': 'مراجعة إدارة العمليات',
+            'Operations Review': 'مراجعة إدارة الفروع',
             'Bank Review': 'مراجعة البنك',
             'Software Activation': 'تفعيل السوفتوير',
             'Completed': 'مكتمل',
