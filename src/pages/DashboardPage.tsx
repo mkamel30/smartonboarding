@@ -134,8 +134,8 @@ const DashboardPage: React.FC = () => {
                         </h2>
                         <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">بيانات حية</span>
                     </div>
-                    <div className="h-64 min-h-[250px] relative">
-                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                    <div style={{ width: '100%', height: 250 }}>
+                        <ResponsiveContainer>
                             <PieChart>
                                 <Pie
                                     data={statusData}
@@ -166,8 +166,8 @@ const DashboardPage: React.FC = () => {
                         </h2>
                         <ArrowUpLeft size={18} className="text-slate-300" />
                     </div>
-                    <div className="h-64 min-h-[250px] relative">
-                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                    <div style={{ width: '100%', height: 250 }}>
+                        <ResponsiveContainer>
                             <BarChart data={branchData}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
@@ -187,9 +187,9 @@ const DashboardPage: React.FC = () => {
                             تجاوزات الالتزام حسب الموظف
                         </h2>
                     </div>
-                    <div className="h-64 min-h-[250px] relative">
+                    <div style={{ width: '100%', height: 250 }}>
                         {breachData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%" minHeight={250}>
+                            <ResponsiveContainer>
                                 <BarChart data={breachData} layout="vertical">
                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                                     <XAxis type="number" hide />

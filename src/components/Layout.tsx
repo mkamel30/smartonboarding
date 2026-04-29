@@ -99,7 +99,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <main className="flex-1 flex flex-col overflow-hidden">
                 <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
                     <div className="flex items-center gap-4 text-slate-500 text-sm">
-                        <span>نظام تهيئة تجار التجزئة الموحد</span>
+                        <span>نظام تهيئة تجار المدفوعات الموحد - سمارت</span>
                         {user?.branch?.name && (
                             <>
                                 <span className="text-gray-300">|</span>

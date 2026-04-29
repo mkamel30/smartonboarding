@@ -21,7 +21,7 @@ const PrintableReport: React.FC<PrintableReportProps> = ({ request }) => {
                             className="report-logo-img"
                         />
                         <div>
-                            <h1 className="report-title">نظام تهيئة تجار التجزئة الموحد</h1>
+                            <h1 className="report-title">نظام تهيئة تجار المدفوعات الموحد - سمارت</h1>
                             <p className="report-subtitle">Merchant Onboarding System - Official Report</p>
                         </div>
                     </div>
@@ -207,7 +207,7 @@ const PrintableReport: React.FC<PrintableReportProps> = ({ request }) => {
             <div className="report-footer">
                 <div className="report-footer-line"></div>
                 <div className="report-footer-content">
-                    <p>تم إنشاء هذا التقرير آلياً بواسطة نظام تهيئة تجار التجزئة الموحد</p>
+                    <p>تم إنشاء هذا التقرير آلياً بواسطة نظام تهيئة تجار المدفوعات الموحد - سمارت</p>
                     <p>Request ID: {request.id}</p>
                 </div>
             </div>
