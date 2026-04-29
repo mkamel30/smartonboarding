@@ -56,14 +56,14 @@ const SubmissionPage: React.FC = () => {
                 // Update existing request
                 request = await apiService.updateRequest(id!, {
                     ...formData,
-                    stage: 'Branch Management Review',
+                    stage: 'Supervisor Review',
                     status: 'Submitted',
-                    ownerRole: 'BRANCH_MGMT',
+                    ownerRole: 'BRANCH_SUPERVISOR',
                     historyEntry: {
                         fromStage: existingRequest?.stage || 'Unknown',
-                        toStage: 'Branch Management Review',
+                        toStage: 'Supervisor Review',
                         status: 'Submitted',
-                        comment: 'تم تعديل الطلب وإعادة تقديمه'
+                        comment: 'تم تعديل الطلب وإعادة تقديمه للمراجعة'
                     }
                 });
             } else {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +12,9 @@ import {
     Settings,
     UserCircle,
     Package,
-    Send
+    Send,
+    Menu,
+    X
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 
@@ -25,6 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -45,14 +48,32 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden dir-rtl" dir="rtl">
-            {/* Sidebar - Right side for Arabic */}
-            <aside className="w-64 bg-slate-900 text-white flex flex-col shadow-xl">
-                <div className="p-6 bg-white border-b border-slate-200">
+            {/* Mobile Overlay */}
+            {isSidebarOpen && (
+                <div 
+                    className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={`
+                fixed inset-y-0 right-0 z-50 w-64 bg-slate-900 text-white flex flex-col shadow-2xl transition-transform duration-300 transform
+                lg:translate-x-0 lg:static lg:inset-auto
+                ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
+            `}>
+                <div className="p-6 bg-white border-b border-slate-200 flex items-center justify-between">
                     <img 
                         src="/Smart-Logo-Horizontal.png" 
                         alt="Logo" 
-                        className="h-10 w-auto mx-auto" 
+                        className="h-10 w-auto" 
                     />
+                    <button 
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="lg:hidden text-slate-500 hover:text-slate-800"
+                    >
+                        <X size={24} />
+                    </button>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -63,6 +84,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                             <Link
                                 key={item.path}
                                 to={item.path}
+                                onClick={() => setIsSidebarOpen(false)}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
                                     ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20'
                                     : 'text-slate-400 hover:bg-slate-800 hover:text-white'
@@ -77,7 +99,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
                 <div className="p-4 border-t border-slate-800">
                     <div className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl mb-4">
-                        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold shrink-0">
                             {user?.fullName.charAt(0)}
                         </div>
                         <div className="flex-1 overflow-hidden">
@@ -96,31 +118,41 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
-                    <div className="flex items-center gap-4 text-slate-500 text-sm">
-                        <span>نظام تهيئة تجار المدفوعات الموحد - سمارت</span>
-                        {user?.branch?.name && (
-                            <>
-                                <span className="text-gray-300">|</span>
-                                <span className="flex items-center gap-1.5"><Activity size={14} /> {user.branch.name}</span>
-                            </>
-                        )}
+            <main className="flex-1 flex flex-col overflow-hidden relative">
+                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-8 shrink-0">
+                    <div className="flex items-center gap-3 lg:gap-4">
+                        <button 
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="p-2 text-slate-500 hover:bg-slate-50 rounded-lg lg:hidden transition-colors"
+                        >
+                            <Menu size={24} />
+                        </button>
+                        <div className="flex items-center gap-4 text-slate-500 text-sm overflow-hidden">
+                            <span className="hidden sm:inline font-bold text-slate-800">سمارت</span>
+                            <span className="text-gray-300 hidden sm:inline">|</span>
+                            <span className="truncate max-w-[150px] sm:max-w-none text-xs sm:text-sm">نظام تهيئة تجار المدفوعات الموحد</span>
+                            {user?.branch?.name && (
+                                <>
+                                    <span className="text-gray-300 hidden md:inline">|</span>
+                                    <span className="hidden md:flex items-center gap-1.5 font-medium text-blue-600"><Activity size={14} /> {user.branch.name}</span>
+                                </>
+                            )}
+                        </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 lg:gap-4">
                         <NotificationBell />
                         
                         <div className="text-left ml-2 hidden sm:block border-r border-slate-200 pr-4">
-                            <p className="text-sm font-medium text-slate-900 leading-tight">{user?.fullName}</p>
-                            <p className="text-xs text-slate-500">{user?.role}</p>
+                            <p className="text-sm font-bold text-slate-900 leading-tight">{user?.fullName}</p>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-tighter">{user?.role}</p>
                         </div>
-                        <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
-                            <UserIcon size={18} />
+                        <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 shadow-inner">
+                            <UserIcon size={16} />
                         </div>
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-8 relative">
+                <div className="flex-1 overflow-y-auto p-4 lg:p-8 relative">
                     {children}
                 </div>
             </main>

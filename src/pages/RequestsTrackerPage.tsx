@@ -64,70 +64,72 @@ const RequestsTrackerPage: React.FC = () => {
 
     return (
         <div className="space-y-6" dir="rtl">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">{t('requests_tracker')}</h1>
-                    <p className="text-slate-500">مراقبة وإدارة جميع طلبات تهيئة التاجر بنظام البنك.</p>
+                    <h1 className="text-xl lg:text-2xl font-bold text-slate-900">{t('requests_tracker')}</h1>
+                    <p className="text-xs lg:text-sm text-slate-500">مراقبة وإدارة جميع طلبات تهيئة التاجر بنظام البنك.</p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="relative">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div className="relative flex-1">
                         <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input
                             type="text"
                             placeholder={t('search')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pr-10 pl-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 md:w-80 transition-all text-right"
+                            className="w-full pr-10 pl-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-right text-sm"
                         />
                     </div>
-                    <button 
-                        onClick={() => {
-                            if (filteredRequests) {
-                                exportToExcel(filteredRequests.map(r => ({
-                                    'رقم الطلب': r.id,
-                                    'اسم التاجر (عربي)': r.merchantNameAr,
-                                    'اسم التاجر (إنجليزي)': r.merchantNameEn,
-                                    'الفرع': r.branch?.name,
-                                    'المحافظة': r.governorate,
-                                    'نوع النشاط': r.activityType,
-                                    'نوع الخدمة': r.serviceType,
-                                    'كود العميل': r.customerCode,
-                                    'نوع الماكينة': r.machineType,
-                                    'الشخص المسؤول': r.responsiblePerson,
-                                    'العنوان': r.address,
-                                    'رقم الهاتف': r.phone,
-                                    'البريد الإلكتروني': r.email,
-                                    'رقم السجل التجاري': r.commercialRegistryNo,
-                                    'رقم البطاقة الضريبية': r.taxCardNo,
-                                    'رقم الرخصة': r.licenseNo,
-                                    'الرقم القومي': r.nationalIdNo,
-                                    'رقم الحساب (IBAN)': r.iban,
-                                    'اسم البنك': r.bankName,
-                                    'كود الماكينة': r.machineCode,
-                                    'سيريال الماكينة': r.machineSerial,
-                                    'قبول الكروت': r.cardsAcceptance,
-                                    'تاريخ التعاقد': r.contractDate,
-                                    'كود الضامن': r.damanCode,
-                                    'كود التاجر (Merchant ID)': r.merchantId,
-                                    'المرحلة': translateStage(r.stage),
-                                    'الحالة': translateStatus(r.status),
-                                    'المفوض إليه': r.assignedTo,
-                                    'دور المسؤول': r.ownerRole,
-                                    'تاريخ الإنشاء': format(new Date(r.createdAt), 'yyyy-MM-dd HH:mm'),
-                                    'تاريخ التحديث': format(new Date(r.updatedAt), 'yyyy-MM-dd HH:mm'),
-                                })), `Comprehensive_Requests_Data_${format(new Date(), 'yyyyMMdd')}`);
-                            }
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm font-bold"
-                        title="Export to Excel"
-                    >
-                        <Download size={18} />
-                        تصدير إكسيل
-                    </button>
-                    <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-600">
-                        <Filter size={20} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => {
+                                if (filteredRequests) {
+                                    exportToExcel(filteredRequests.map(r => ({
+                                        'رقم الطلب': r.id,
+                                        'اسم التاجر (عربي)': r.merchantNameAr,
+                                        'اسم التاجر (إنجليزي)': r.merchantNameEn,
+                                        'الفرع': r.branch?.name,
+                                        'المحافظة': r.governorate,
+                                        'نوع النشاط': r.activityType,
+                                        'نوع الخدمة': r.serviceType,
+                                        'كود العميل': r.customerCode,
+                                        'نوع الماكينة': r.machineType,
+                                        'الشخص المسؤول': r.responsiblePerson,
+                                        'العنوان': r.address,
+                                        'رقم الهاتف': r.phone,
+                                        'البريد الإلكتروني': r.email,
+                                        'رقم السجل التجاري': r.commercialRegistryNo,
+                                        'رقم البطاقة الضريبية': r.taxCardNo,
+                                        'رقم الرخصة': r.licenseNo,
+                                        'الرقم القومي': r.nationalIdNo,
+                                        'رقم الحساب (IBAN)': r.iban,
+                                        'اسم البنك': r.bankName,
+                                        'كود الماكينة': r.machineCode,
+                                        'سيريال الماكينة': r.machineSerial,
+                                        'قبول الكروت': r.cardsAcceptance,
+                                        'تاريخ التعاقد': r.contractDate,
+                                        'كود الضامن': r.damanCode,
+                                        'كود التاجر (Merchant ID)': r.merchantId,
+                                        'المرحلة': translateStage(r.stage),
+                                        'الحالة': translateStatus(r.status),
+                                        'المفوض إليه': r.assignedTo,
+                                        'دور المسؤول': r.ownerRole,
+                                        'تاريخ الإنشاء': format(new Date(r.createdAt), 'yyyy-MM-dd HH:mm'),
+                                        'تاريخ التحديث': format(new Date(r.updatedAt), 'yyyy-MM-dd HH:mm'),
+                                    })), `Comprehensive_Requests_Data_${format(new Date(), 'yyyyMMdd')}`);
+                                }
+                            }}
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm font-bold text-sm whitespace-nowrap"
+                            title="Export to Excel"
+                        >
+                            <Download size={18} />
+                            <span className="hidden xs:inline">تصدير إكسيل</span>
+                        </button>
+                        <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-600">
+                            <Filter size={20} />
+                        </button>
+                    </div>
                 </div>
             </div>
 
