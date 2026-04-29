@@ -86,6 +86,55 @@ export const apiService = {
         return response.data;
     },
 
+    requestAction: async (id: string, action: string, payload: any = {}): Promise<OnboardingRequest> => {
+        const response = await api.patch(`/requests/${id}/action`, { action, payload });
+        return response.data;
+    },
+
+    // --- BATCHES ---
+    getBatches: async () => {
+        const response = await api.get('/batches');
+        return response.data;
+    },
+    
+    getBatchDetails: async (id: string) => {
+        const response = await api.get(`/batches/${id}`);
+        return response.data;
+    },
+
+    createBatch: async (formData: FormData) => {
+        const response = await api.post('/batches', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+
+    receiveBatch: async (id: string) => {
+        const response = await api.patch(`/batches/${id}/receive`);
+        return response.data;
+    },
+
+    // --- NOTIFICATIONS ---
+    getNotifications: async () => {
+        const response = await api.get('/notifications');
+        return response.data;
+    },
+
+    getUnreadNotificationCount: async () => {
+        const response = await api.get('/notifications/unread-count');
+        return response.data;
+    },
+
+    markNotificationRead: async (id: string) => {
+        const response = await api.patch(`/notifications/${id}/read`);
+        return response.data;
+    },
+
+    markAllNotificationsRead: async () => {
+        const response = await api.patch('/notifications/read-all');
+        return response.data;
+    },
+
     // --- ADMIN ---
     getBranches: async (): Promise<Branch[]> => {
         const response = await api.get('/admin/branches');
@@ -129,6 +178,13 @@ export const apiService = {
 
     uploadDocs: async (formData: FormData) => {
         const response = await api.post('/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+
+    uploadSalesForm: async (formData: FormData) => {
+        const response = await api.post('/upload-sales-form', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         return response.data;

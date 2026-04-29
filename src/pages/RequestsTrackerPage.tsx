@@ -48,11 +48,16 @@ const RequestsTrackerPage: React.FC = () => {
 
     const translateStage = (stage: string) => {
         const map: any = {
-            'Supervisor Review': 'مراجعة المشرف',
-            'Operations Review': 'مراجعة العمليات',
-            'Returned to Branch': 'مُعاد للفرع',
+            'Branch Submission': 'تقديم الفرع',
+            'Branch Management Review': 'مراجعة إدارة الفروع',
+            'Sales Management Review': 'مراجعة إدارة المبيعات',
+            'Operations Review': 'مراجعة إدارة العمليات',
+            'Bank Review': 'مراجعة البنك',
+            'Software Activation': 'تفعيل السوفتوير',
             'Completed': 'مكتمل',
-            'Closed': 'مغلق'
+            'Closed': 'مغلق',
+            'Supervisor Review': 'مراجعة المشرف',
+            'Returned to Branch': 'مُعاد للفرع'
         };
         return map[stage] || stage;
     };

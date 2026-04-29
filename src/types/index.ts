@@ -1,19 +1,23 @@
-export type Role = 'ADMIN' | 'BRANCH_SALES' | 'BRANCH_SUPERVISOR' | 'BRANCH_MANAGER' | 'OPERATIONS' | 'MANAGEMENT';
+export type Role = 'ADMIN' | 'BRANCH_SALES' | 'BRANCH_SUPERVISOR' | 'BRANCH_MANAGER' | 'BRANCH_MGMT' | 'SALES_MGMT' | 'OPERATIONS' | 'MANAGEMENT';
 
 export type RequestStatus = 
   | 'Pending'        // Waiting for first action
   | 'Submitted'      // Forwarded to next stage
   | 'Returned'       // Sent back for modification
   | 'Activated'      // Approved and MID assigned
+  | 'Completed'      // Software activated
   | 'Rejected'       // Final rejection
   | 'Cancelled';     // Cancelled by branch
 
 export type RequestStage = 
-  | 'Supervisor Review'  // With Branch Supervisor
-  | 'Operations Review'  // With Operations Team
-  | 'Returned to Branch' // With Branch for edits
-  | 'Completed'          // Process finished
-  | 'Closed';            // Process aborted
+  | 'Branch Submission'
+  | 'Branch Management Review'
+  | 'Sales Management Review'
+  | 'Operations Review'
+  | 'Bank Review'
+  | 'Software Activation'
+  | 'Completed'
+  | 'Closed';
 
 export interface Document {
     id: string;
@@ -42,6 +46,38 @@ export interface Branch {
     address?: string;
     phone?: string;
     isActive: boolean;
+}
+
+export interface Notification {
+    id: string;
+    userId: string;
+    type: string;
+    title: string;
+    message: string;
+    requestId?: string;
+    isRead: boolean;
+    createdAt: string;
+}
+
+export interface ShipmentBatch {
+    id: string;
+    batchNumber: string;
+    waybillNumber: string;
+    waybillFileId?: string;
+    waybillFolderId?: string;
+    senderBranchId: string;
+    senderBranch?: Branch;
+    senderUserId: string;
+    senderUser?: Partial<User>;
+    receivedAt?: string;
+    receivedById?: string;
+    receivedBy?: Partial<User>;
+    status: string;
+    notes?: string;
+    createdAt: string;
+    updatedAt: string;
+    requests?: Partial<OnboardingRequest>[];
+    _count?: { requests: number };
 }
 
 export interface OnboardingRequest {
@@ -80,10 +116,33 @@ export interface OnboardingRequest {
     damanCode?: string;
 
     // Workflow fields
-    stage: string;
+    stage: RequestStage;
     status: RequestStatus;
     assignedTo: string;
     ownerRole: Role;
+    kycType?: 'KYC' | 'LKYC';
+
+    // Tracking
+    branchMgmtApprovedAt?: string;
+    branchMgmtApprovedBy?: string;
+    salesMgmtApprovedAt?: string;
+    salesMgmtApprovedBy?: string;
+    salesMgmtFormFileId?: string;
+    sentToBankAt?: string;
+    bankResponseAt?: string;
+    bankResponse?: string;
+    
+    softwareActivated?: boolean;
+    activatedAt?: string;
+    activatedById?: string;
+
+    shipmentBatchId?: string;
+    shipmentBatch?: ShipmentBatch;
+    documentsSentAt?: string;
+    waybillNumber?: string;
+    documentsReceivedAt?: string;
+    documentsReceivedBy?: string;
+    returnToStage?: string;
 
     // SLA fields
     slaStartDate: string;
@@ -93,6 +152,7 @@ export interface OnboardingRequest {
     merchantId?: string;
 
     // History & Docs
+    driveFolderId?: string;
     documents: Document[];
     history: ApprovalHistory[];
     createdBy?: User;

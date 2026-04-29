@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
@@ -23,7 +23,8 @@ import {
     ChevronDown,
     Loader2,
     Clock,
-    ExternalLink
+    ExternalLink,
+    Upload
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { exportComponentToPDF, exportToExcel } from '../utils/exportUtils';
@@ -38,7 +39,10 @@ const RequestDetailsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'history'>('overview');
     const [comments, setComments] = useState('');
     const [merchantId, setMerchantId] = useState('');
+    const [kycType, setKycType] = useState<'KYC' | 'LKYC' | ''>('');
+    const [salesFormFile, setSalesFormFile] = useState<File | null>(null);
     const [showExportMenu, setShowExportMenu] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleExportPDF = () => {
         setShowExportMenu(false);
@@ -46,6 +50,7 @@ const RequestDetailsPage: React.FC = () => {
     };
 
     const handleExportExcel = () => {
+        if (!request) return;
         exportToExcel([{
             'رقم الطلب': request.id,
             'اسم التاجر (عربي)': request.merchantNameAr,
@@ -72,9 +77,12 @@ const RequestDetailsPage: React.FC = () => {
             'تاريخ التعاقد': request.contractDate,
             'كود الضامن': request.damanCode,
             'كود التاجر (Merchant ID)': request.merchantId,
-            'المرحلة': translateStatus(request.status),
+            'نوع KYC': request.kycType,
+            'رقم باتش الشحن': request.shipmentBatch?.batchNumber,
+            'رقم البوليصة': request.waybillNumber,
+            'المرحلة': request.stage,
             'الحالة': request.status,
-            'المفوض إليه': request.assignedTo,
+            'المفوض إليه': request.ownerRole,
             'تاريخ الإنشاء': format(new Date(request.createdAt), 'yyyy-MM-dd HH:mm'),
         }], `Merchant_Data_${request.id.substring(0, 8)}`);
         setShowExportMenu(false);
@@ -92,92 +100,81 @@ const RequestDetailsPage: React.FC = () => {
         enabled: !!id && !!request,
     });
 
-    const mutation = useMutation({
-        mutationFn: (data: { updates: any, historyEntry?: any }) => 
-            apiService.updateRequest(id!, { ...data.updates, historyEntry: data.historyEntry }),
+    const actionMutation = useMutation({
+        mutationFn: async (data: { action: string, payload?: any }) => {
+            let finalPayload = { ...data.payload, comment: comments };
+            
+            if (data.action === 'approve' && request?.stage === 'Sales Management Review') {
+                if (!salesFormFile) throw new Error('الرجاء إرفاق النموذج الموقع');
+                
+                const formData = new FormData();
+                formData.append('salesForm', salesFormFile);
+                formData.append('requestId', id!);
+                
+                const uploadRes = await apiService.uploadSalesForm(formData);
+                finalPayload.formFileId = uploadRes.fileId;
+            }
+
+            return apiService.requestAction(id!, data.action, finalPayload);
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['request', id] });
             queryClient.invalidateQueries({ queryKey: ['requests'] });
             setComments('');
+            setMerchantId('');
+            setKycType('');
+            setSalesFormFile(null);
+            alert('تم تنفيذ الإجراء بنجاح');
         },
+        onError: (error: any) => {
+            alert(error.response?.data?.error || error.message || 'حدث خطأ أثناء تنفيذ الإجراء');
+        }
     });
 
     if (isLoading || !request) return <div className="p-12 flex items-center justify-center"><Loader2 className="animate-spin text-blue-500" /></div>;
 
     const { remainingDays, isBreached } = calculateSLA(request.slaStartDate, request.slaTargetDays);
 
-    const handleAction = (action: 'approve' | 'return' | 'reject' | 'activate' | 'cancel') => {
-        if ((action === 'return' || action === 'reject' || action === 'cancel') && !comments) {
-            alert('يرجى كتابة تعليق يوضح سبب الإجراء.');
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setSalesFormFile(e.target.files[0]);
+        }
+    };
+
+    const doAction = (action: string, payload: any = {}) => {
+        if (['return', 'reject', 'bank_rejected', 'bank_modification'].includes(action) && !comments) {
+            alert('يرجى كتابة تعليق يوضح السبب.');
             return;
         }
-
-        let updates: any = {
-            status: 
-                action === 'approve' ? 'Submitted' : 
-                action === 'activate' ? 'Activated' : 
-                action === 'return' ? 'Returned' : 
-                action === 'cancel' ? 'Cancelled' : 'Rejected',
-        };
-
-        const historyEntry: any = {
-            fromStage: request.stage,
-            status: updates.status,
-            comment: comments || (action === 'approve' ? 'تمت الموافقة والتحصيل للإدارة المركزية' : '')
-        };
-
-        if (user?.role === 'BRANCH_SUPERVISOR') {
-            if (action === 'approve') {
-                updates.stage = 'Operations Review';
-                updates.ownerRole = 'OPERATIONS';
-                updates.assignedTo = 'إدارة العمليات';
-                updates.slaStartDate = new Date().toISOString();
-                historyEntry.toStage = 'Operations Review';
-            } else if (action === 'return') {
-                updates.stage = 'Returned to Branch';
-                updates.ownerRole = 'BRANCH_SALES';
-                updates.assignedTo = request.createdBy?.fullName || 'مسئول المبيعات';
-                historyEntry.toStage = 'Returned to Branch';
-            } else if (action === 'cancel') {
-                updates.stage = 'Closed';
-                updates.ownerRole = 'MANAGEMENT';
-                historyEntry.toStage = 'Closed';
-            }
-        } else if (user?.role === 'OPERATIONS') {
-            if (action === 'activate') {
-                updates.status = 'Activated';
-                updates.stage = 'Completed';
-                updates.merchantId = merchantId;
-                updates.ownerRole = 'OPERATIONS';
-                historyEntry.toStage = 'Completed';
-            } else if (action === 'return') {
-                updates.stage = 'Returned to Branch';
-                updates.ownerRole = 'BRANCH_SALES';
-                updates.assignedTo = request.createdBy?.fullName || 'مسئول المبيعات';
-                historyEntry.toStage = 'Returned to Branch';
-            } else if (action === 'reject') {
-                updates.status = 'Rejected';
-                updates.stage = 'Closed';
-                historyEntry.toStage = 'Closed';
-            }
-        }
-
-        mutation.mutate({
-            updates,
-            historyEntry
-        });
+        actionMutation.mutate({ action, payload });
     };
 
     const translateStatus = (status: string) => {
         const map: any = {
             'Pending': 'قيد الانتظار',
             'Submitted': 'تم التقديم',
-            'Activated': 'تم التفعيل',
+            'Activated': 'تم تعيين MID',
+            'Completed': 'اكتملت التهيئة',
             'Returned': 'مُعاد للتعديل',
             'Rejected': 'تم الرفض',
-            'Cancelled': 'تم الإلغاء'
+            'Cancelled': 'تم الإلغاء',
+            'Closed': 'مغلق'
         };
         return map[status] || status;
+    };
+
+    const translateStage = (stage: string) => {
+        const map: any = {
+            'Branch Submission': 'تقديم الفرع',
+            'Branch Management Review': 'مراجعة إدارة الفروع',
+            'Sales Management Review': 'مراجعة إدارة المبيعات',
+            'Operations Review': 'مراجعة إدارة العمليات',
+            'Bank Review': 'مراجعة البنك',
+            'Software Activation': 'تفعيل السوفتوير',
+            'Completed': 'مكتمل',
+            'Closed': 'مغلق'
+        };
+        return map[stage] || stage;
     };
 
     return (
@@ -198,6 +195,11 @@ const RequestDetailsPage: React.FC = () => {
                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${getStatusColor(request.status, isBreached)}`}>
                                 {translateStatus(request.status)}
                             </span>
+                            {request.kycType && (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-600 border border-purple-200">
+                                    {request.kycType}
+                                </span>
+                            )}
                         </div>
                         <h2 className="text-xl text-slate-800 font-bold">{request.merchantNameAr}</h2>
                         <p className="text-slate-500">{request.merchantNameEn}</p>
@@ -212,7 +214,10 @@ const RequestDetailsPage: React.FC = () => {
                         <Calendar size={14} /> بدأ في {format(new Date(request.slaStartDate), 'dd/MM/yyyy')}
                     </div>
                     <div className="text-sm text-slate-500 flex items-center gap-1.5 justify-end">
-                        <UserIcon size={14} /> المسؤول: {request.assignedTo} ({request.ownerRole})
+                        <UserIcon size={14} /> عند: {request.ownerRole}
+                    </div>
+                    <div className="text-sm font-bold text-slate-800 bg-slate-100 px-3 py-1 rounded-full mt-1">
+                        المرحلة: {translateStage(request.stage)}
                     </div>
                     
                     {/* Consolidated Export Menu */}
@@ -235,7 +240,6 @@ const RequestDetailsPage: React.FC = () => {
                                     <FileText size={18} className="text-red-500" />
                                     <div className="text-right flex-1">
                                         <p className="font-bold">تنزيل ملف PDF</p>
-                                        <p className="text-[10px] text-slate-400">مثالي للطباعة ومعاينة البيانات</p>
                                     </div>
                                 </button>
                                 <button 
@@ -245,7 +249,6 @@ const RequestDetailsPage: React.FC = () => {
                                     <FileSpreadsheet size={18} className="text-emerald-500" />
                                     <div className="text-right flex-1">
                                         <p className="font-bold">تنزيل ملف Excel</p>
-                                        <p className="text-[10px] text-slate-400">مثالي للبيانات والجداول الحسابية</p>
                                     </div>
                                 </button>
                             </div>
@@ -275,7 +278,7 @@ const RequestDetailsPage: React.FC = () => {
                 ))}
             </div>
 
-            {/* Tab Content - TARGET FOR PDF EXPORT */}
+            {/* Tab Content */}
             <div id="request-details-content" className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-right p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
                 <div className="lg:col-span-2 space-y-8">
                     {activeTab === 'overview' && (
@@ -351,12 +354,12 @@ const RequestDetailsPage: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-10">
                                     {[
                                         { label: 'نوع النشاط', value: request.activityType },
-                                        { label: 'كود العميل/المخبز', value: request.customerCode },
+                                        { label: 'كود العميل', value: request.customerCode },
                                         { label: 'نوع الخدمة', value: request.serviceType },
-                                        { label: 'قبول البطاقات (ID)', value: request.cardsAcceptance },
+                                        { label: 'قبول البطاقات', value: request.cardsAcceptance },
                                         { label: 'ماكينة موديل', value: request.machineType },
                                         { label: 'كود الماكينة', value: request.machineCode },
-                                        { label: 'مسلسل الماكينة (S/N)', value: request.machineSerial },
+                                        { label: 'مسلسل الماكينة', value: request.machineSerial },
                                         { label: 'كود ضامن', value: request.damanCode },
                                         { label: 'تاريخ التعاقد', value: request.contractDate },
                                         { label: 'رقم التاجر (MID)', value: request.merchantId || 'لم يتم التعيين بعد' },
@@ -375,14 +378,14 @@ const RequestDetailsPage: React.FC = () => {
                         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
                             <div className="flex items-center justify-between mb-8">
                                 <h3 className="text-lg font-bold">المستندات المرفوعة (Google Drive)</h3>
-                                {driveFiles && driveFiles.length > 0 && (
+                                {request.driveFolderId && (
                                     <a
-                                        href={`https://drive.google.com/drive/folders/${driveFiles[0].folderId}`}
+                                        href={`https://drive.google.com/drive/folders/${request.driveFolderId}`}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="text-sm font-bold text-blue-600 flex items-center gap-1 hover:underline"
                                     >
-                                        <FolderOpen size={16} /> فتح المجلد بالكامل
+                                        <FolderOpen size={16} /> فتح مجلد التاجر
                                     </a>
                                 )}
                             </div>
@@ -395,7 +398,7 @@ const RequestDetailsPage: React.FC = () => {
                             ) : !driveFiles || driveFiles.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-12 text-slate-400 border-2 border-dashed border-slate-100 rounded-3xl">
                                     <FolderOpen size={48} className="mb-4 opacity-20" />
-                                    <p>لم يتم رفع أي مستندات لهذا الطلب بعد.</p>
+                                    <p>لم يتم العثور على أي ملفات.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-3">
@@ -407,7 +410,6 @@ const RequestDetailsPage: React.FC = () => {
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="font-bold text-slate-800">{file.name}</p>
-                                                    <p className="text-xs text-slate-400">{file.mimeType.split('/').pop()?.toUpperCase()}</p>
                                                 </div>
                                             </div>
                                             <a
@@ -416,10 +418,40 @@ const RequestDetailsPage: React.FC = () => {
                                                 rel="noreferrer"
                                                 className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:border-blue-500 hover:text-blue-500 transition-all shadow-sm"
                                             >
-                                                عرض المستند <ExternalLink size={14} className="rtl-flip" />
+                                                عرض <ExternalLink size={14} className="rtl-flip" />
                                             </a>
                                         </div>
                                     ))}
+                                </div>
+                            )}
+
+                            {/* Shipping Information */}
+                            {request.waybillNumber && (
+                                <div className="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
+                                    <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                        <Info size={18} className="text-slate-500" />
+                                        بيانات الشحن الورقي
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <span className="text-slate-500 block mb-1">رقم الباتش</span>
+                                            <span className="font-bold">{request.shipmentBatch?.batchNumber || '---'}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-slate-500 block mb-1">بوليصة الشحن</span>
+                                            <span className="font-bold">{request.waybillNumber}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-slate-500 block mb-1">تاريخ الإرسال</span>
+                                            <span className="font-bold">{request.documentsSentAt ? format(new Date(request.documentsSentAt), 'yyyy-MM-dd') : '---'}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-slate-500 block mb-1">حالة الاستلام</span>
+                                            <span className={`font-bold ${request.documentsReceivedAt ? 'text-green-600' : 'text-amber-500'}`}>
+                                                {request.documentsReceivedAt ? 'تم الاستلام' : 'قيد الشحن'}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -427,23 +459,18 @@ const RequestDetailsPage: React.FC = () => {
 
                     {activeTab === 'history' && (
                         <div className="bg-white p-10 rounded-3xl shadow-sm border border-slate-200">
-                            <div className="flex items-center justify-between mb-10">
-                                <h3 className="text-xl font-extrabold text-slate-900">سجل عمليات التدقيق</h3>
-                                <div className="text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100 flex items-center gap-1.5">
-                                    <HistoryIcon size={14} /> تحديث تلقائي
-                                </div>
-                            </div>
-                            
+                            <h3 className="text-xl font-extrabold text-slate-900 mb-10">سجل عمليات التدقيق والمراحل</h3>
                             <div className="relative space-y-12 before:absolute before:right-[22px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-blue-500/20 before:via-slate-100 before:to-slate-50">
                                 {request.history.map((item, idx) => {
                                     const StatusIcon = 
-                                        item.status === 'Activated' ? CheckCircle :
+                                        ['Activated', 'Completed'].includes(item.status) ? CheckCircle :
                                         item.status === 'Rejected' ? XCircle :
                                         item.status === 'Returned' ? RotateCw :
                                         item.status === 'Submitted' ? ArrowRight : Info;
                                     
                                     const statusColors: any = {
                                         'Activated': 'bg-green-100 text-green-600 border-green-200',
+                                        'Completed': 'bg-green-100 text-green-600 border-green-200',
                                         'Rejected': 'bg-red-100 text-red-600 border-red-200',
                                         'Returned': 'bg-amber-100 text-amber-600 border-amber-200',
                                         'Submitted': 'bg-blue-100 text-blue-600 border-blue-200',
@@ -452,7 +479,6 @@ const RequestDetailsPage: React.FC = () => {
 
                                     return (
                                         <div key={idx} className="relative pr-16 animate-in fade-in slide-in-from-right-4 duration-500">
-                                            {/* Icon Circle */}
                                             <div className={`absolute right-0 top-0 w-11 h-11 rounded-2xl border-4 border-white shadow-sm flex items-center justify-center z-10 ${statusColors[item.status] || 'bg-slate-100 text-slate-600'}`}>
                                                 <StatusIcon size={20} className={item.status === 'Returned' ? 'rtl-flip' : ''} />
                                             </div>
@@ -460,13 +486,10 @@ const RequestDetailsPage: React.FC = () => {
                                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 mb-3">
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-lg font-extrabold text-slate-900">{translateStatus(item.status)}</span>
-                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-                                                            {item.changedByUser?.role || '---'}
-                                                        </span>
+                                                        <span className="text-lg font-extrabold text-slate-900">{item.status} - {translateStage(item.toStage || '')}</span>
                                                     </div>
                                                     <p className="text-sm font-bold text-slate-600 flex items-center gap-1.5">
-                                                        <UserIcon size={14} className="text-slate-400" /> {item.changedByUser?.fullName || 'System'}
+                                                        <UserIcon size={14} className="text-slate-400" /> {item.changedByUser?.fullName || 'System'} ({item.changedByUser?.role || 'SYSTEM'})
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
@@ -495,12 +518,12 @@ const RequestDetailsPage: React.FC = () => {
                     <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl shadow-slate-200">
                         <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
                             <RotateCw size={20} className="text-blue-400 rtl-flip" />
-                            {t('workflow_actions')}
+                            الإجراءات المتاحة
                         </h3>
 
-                        {request.status === 'Activated' || request.status === 'Rejected' || request.status === 'Cancelled' ? (
+                        {['Completed', 'Closed', 'Rejected', 'Cancelled'].includes(request.stage) ? (
                             <div className="text-slate-400 italic text-center py-4 border border-white/10 rounded-xl">
-                                هذا الطلب مغلق ({translateStatus(request.status)}).
+                                هذا الطلب مغلق ({translateStage(request.stage)}).
                             </div>
                         ) : (
                             <div className="space-y-6">
@@ -511,91 +534,111 @@ const RequestDetailsPage: React.FC = () => {
                                             value={comments}
                                             onChange={(e) => setComments(e.target.value)}
                                             className="w-full bg-slate-800 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none min-h-[100px] text-right"
-                                            placeholder="اكتب ملاحظاتك هنا..."
+                                            placeholder="اكتب ملاحظاتك/أسبابك هنا..."
                                         />
                                     </div>
                                 )}
 
-                                {user?.role === 'BRANCH_SUPERVISOR' && request.ownerRole === 'BRANCH_SUPERVISOR' && (
-                                    <div className="grid grid-cols-1 gap-3">
+                                {/* --- 1. BRANCH MGMT REVIEW --- */}
+                                {(user?.role === 'BRANCH_MGMT' || user?.role === 'ADMIN') && request.stage === 'Branch Management Review' && (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">نوع التوثيق المطلق (إلزامي للموافقة)</label>
+                                            <select
+                                                value={kycType}
+                                                onChange={(e) => setKycType(e.target.value as any)}
+                                                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm focus:border-blue-500 outline-none text-white"
+                                            >
+                                                <option value="">-- حدد النوع --</option>
+                                                <option value="KYC">KYC</option>
+                                                <option value="LKYC">LKYC</option>
+                                            </select>
+                                        </div>
                                         <button
-                                            onClick={() => handleAction('approve')}
-                                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/40"
+                                            disabled={!kycType || actionMutation.isPending}
+                                            onClick={() => doAction('approve', { kycType })}
+                                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
                                         >
-                                            <CheckCircle size={20} /> الموافقة والتقديم للعمليات
+                                            <CheckCircle size={20} /> موافقة وتحديد النوع
                                         </button>
                                         <div className="grid grid-cols-2 gap-3">
-                                            <button
-                                                onClick={() => handleAction('return')}
-                                                className="py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
-                                            >
-                                                <RotateCw size={18} className="rtl-flip" /> إرجاع للفرع
-                                            </button>
-                                            <button
-                                                onClick={() => handleAction('cancel')}
-                                                className="py-3 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-red-600/30"
-                                            >
-                                                <XCircle size={18} /> إلغاء الطلب
-                                            </button>
+                                            <button onClick={() => doAction('return')} disabled={actionMutation.isPending} className="py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-700"><RotateCw size={18} /> إرجاع للفرع</button>
+                                            <button onClick={() => doAction('reject')} disabled={actionMutation.isPending} className="py-3 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white font-bold rounded-xl flex items-center justify-center gap-2 border border-red-600/30"><XCircle size={18} /> رفض الطلب</button>
                                         </div>
                                     </div>
                                 )}
 
-                                {user?.role === 'OPERATIONS' && request.ownerRole === 'OPERATIONS' && (
-                                    <div className="space-y-6">
-                                        <div>
-                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">تعيين رقم التاجر MID</label>
-                                            <input
-                                                type="text"
-                                                value={merchantId}
-                                                onChange={(e) => setMerchantId(e.target.value)}
-                                                className="w-full bg-slate-800 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                                placeholder="MID-XXXXXX"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-1 gap-3">
-                                            <button
-                                                disabled={!merchantId}
-                                                onClick={() => handleAction('activate')}
-                                                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-900/40 disabled:opacity-50"
-                                            >
-                                                <CheckCircle size={20} /> {t('activate_merchant')}
-                                            </button>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <button
-                                                    onClick={() => handleAction('return')}
-                                                    className="py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
-                                                >
-                                                    <RotateCw size={18} className="rtl-flip" /> إرجاع للفرع
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAction('reject')}
-                                                    className="py-3 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-red-600/30"
-                                                >
-                                                    <XCircle size={18} /> رفض الطلب
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {user?.role === 'BRANCH_SALES' && request.status === 'Returned' && (
+                                {/* --- 2. SALES MGMT REVIEW --- */}
+                                {(user?.role === 'SALES_MGMT' || user?.role === 'ADMIN') && request.stage === 'Sales Management Review' && (
                                     <div className="space-y-4">
-                                        <div className="p-4 bg-blue-600/10 border border-blue-600/20 rounded-2xl text-blue-400 text-sm">
-                                            هذا الطلب بانتظار تعديلاتك حالياً. يمكنك تعديل البيانات وإعادة التقديم.
+                                        <div className="p-4 bg-slate-800 rounded-xl border border-slate-700">
+                                            <p className="text-xs font-bold text-slate-400 mb-3">نموذج الموافقة الموقع (إلزامي)</p>
+                                            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileSelect} accept=".pdf,image/*" />
+                                            <button onClick={() => fileInputRef.current?.click()} className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg flex items-center justify-center gap-2 text-sm">
+                                                <Upload size={16} /> {salesFormFile ? salesFormFile.name : 'اختر ملف...'}
+                                            </button>
                                         </div>
                                         <button
-                                            onClick={() => navigate(`/edit/${id}`)}
-                                            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
+                                            disabled={!salesFormFile || actionMutation.isPending}
+                                            onClick={() => doAction('approve')}
+                                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2"
                                         >
-                                            <FileText size={20} /> تعديل وإعادة تقديم
+                                            {actionMutation.isPending ? <Loader2 className="animate-spin" /> : <CheckCircle size={20} />} موافقة وإرسال للعمليات
                                         </button>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button onClick={() => doAction('return')} disabled={actionMutation.isPending} className="py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-700"><RotateCw size={18} /> إرجاع للفرع</button>
+                                            <button onClick={() => doAction('reject')} disabled={actionMutation.isPending} className="py-3 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white font-bold rounded-xl flex items-center justify-center gap-2 border border-red-600/30"><XCircle size={18} /> رفض الطلب</button>
+                                        </div>
                                     </div>
                                 )}
-                                
+
+                                {/* --- 3. OPERATIONS REVIEW --- */}
+                                {(user?.role === 'OPERATIONS' || user?.role === 'ADMIN') && request.stage === 'Operations Review' && (
+                                    <div className="space-y-4">
+                                        <button onClick={() => doAction('send_to_bank')} disabled={actionMutation.isPending} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2"><ArrowRight size={20} className="rtl-flip" /> إرسال للبنك</button>
+                                        <button onClick={() => doAction('return')} disabled={actionMutation.isPending} className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl flex items-center justify-center gap-2 border border-slate-700"><RotateCw size={18} /> طلب تعديل من الفرع</button>
+                                    </div>
+                                )}
+
+                                {/* --- 4. BANK REVIEW (By Operations) --- */}
+                                {(user?.role === 'OPERATIONS' || user?.role === 'ADMIN') && request.stage === 'Bank Review' && (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">كود التاجر المستلم من البنك (MID)</label>
+                                            <input type="text" value={merchantId} onChange={(e) => setMerchantId(e.target.value)} className="w-full bg-slate-800 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-white" placeholder="MID-XXXXXX" />
+                                        </div>
+                                        <button disabled={!merchantId || actionMutation.isPending} onClick={() => doAction('bank_approved', { mid: merchantId })} className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2"><CheckCircle size={20} /> البنك وافق (حفظ الـ MID)</button>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button onClick={() => doAction('bank_modification')} disabled={actionMutation.isPending} className="py-3 bg-amber-600/20 hover:bg-amber-600 text-amber-400 hover:text-white font-bold rounded-xl flex items-center justify-center gap-2"><RotateCw size={18} /> تعديل من البنك</button>
+                                            <button onClick={() => doAction('bank_rejected')} disabled={actionMutation.isPending} className="py-3 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white font-bold rounded-xl flex items-center justify-center gap-2"><XCircle size={18} /> البنك رفض</button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* --- 5. SOFTWARE ACTIVATION (By Branch Sales) --- */}
+                                {(user?.role === 'BRANCH_SALES' || user?.role === 'ADMIN') && request.stage === 'Software Activation' && (
+                                    <div className="space-y-4">
+                                        <div className="p-4 bg-green-900/30 border border-green-500/20 rounded-xl text-green-400 text-sm mb-4">
+                                            تم استلام MID: {request.merchantId}. يرجى تشغيل الماكينة ثم تأكيد التفعيل.
+                                        </div>
+                                        <button onClick={() => doAction('confirm_activation')} disabled={actionMutation.isPending} className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 shadow-lg"><CheckCircle size={24} /> تأكيد تشغيل السوفتوير</button>
+                                    </div>
+                                )}
+
+                                {/* --- 6. RESUBMISSION (Branch Sales) --- */}
+                                {(user?.role === 'BRANCH_SALES' || user?.role === 'ADMIN') && request.status === 'Returned' && (
+                                    <div className="space-y-4">
+                                        <div className="p-4 bg-blue-600/10 border border-blue-600/20 rounded-2xl text-blue-400 text-sm">
+                                            الطلب مُرجع للتعديل. سيتم إرساله للجهة المطلوبة بعد التعديل.
+                                        </div>
+                                        <button onClick={() => navigate(`/edit/${id}`)} className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl flex items-center justify-center gap-2"><FileText size={20} /> تعديل البيانات</button>
+                                        <button onClick={() => doAction('resubmit')} disabled={actionMutation.isPending} className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl flex items-center justify-center gap-2"><ArrowRight size={20} className="rtl-flip" /> إعادة تقديم الطلب بعد التعديل</button>
+                                    </div>
+                                )}
+
                                 {request.ownerRole !== user?.role && request.status !== 'Returned' && (
                                     <div className="text-slate-500 italic text-center py-4 text-sm">
-                                        الطلب حالياً بانتظار إجراء من: {request.ownerRole === 'BRANCH_SUPERVISOR' ? 'مشرف الفرع' : request.ownerRole}
+                                        الطلب حالياً بانتظار إجراء من: {request.ownerRole}
                                     </div>
                                 )}
                             </div>
@@ -624,7 +667,6 @@ const RequestDetailsPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Hidden Printable Report - Only visible during print */}
             <div className="printable-report-wrapper">
                 <PrintableReport request={request} />
             </div>

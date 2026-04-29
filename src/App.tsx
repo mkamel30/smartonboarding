@@ -9,6 +9,9 @@ import SubmissionPage from './pages/SubmissionPage';
 import RequestDetailsPage from './pages/RequestDetailsPage';
 import AdminPage from './pages/AdminPage';
 import ProfilePage from './pages/ProfilePage';
+import BatchShipmentPage from './pages/BatchShipmentPage';
+import BatchesListPage from './pages/BatchesListPage';
+import NotificationsPage from './pages/NotificationsPage';
 import Layout from './components/Layout';
 
 const queryClient = new QueryClient();
@@ -32,6 +35,9 @@ const AppRoutes = () => {
       <Route path="/details/:id" element={<PrivateRoute><Layout><RequestDetailsPage /></Layout></PrivateRoute>} />
       <Route path="/admin" element={<PrivateRoute><Layout><AdminPage /></Layout></PrivateRoute>} />
       <Route path="/profile" element={<PrivateRoute><Layout><ProfilePage /></Layout></PrivateRoute>} />
+      <Route path="/shipment" element={<PrivateRoute><Layout><BatchShipmentPage /></Layout></PrivateRoute>} />
+      <Route path="/batches" element={<PrivateRoute><Layout><BatchesListPage /></Layout></PrivateRoute>} />
+      <Route path="/notifications" element={<PrivateRoute><Layout><NotificationsPage /></Layout></PrivateRoute>} />
 
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

@@ -10,8 +10,11 @@ import {
     User as UserIcon,
     Activity,
     Settings,
-    UserCircle
+    UserCircle,
+    Package,
+    Send
 } from 'lucide-react';
+import NotificationBell from './NotificationBell';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -29,11 +32,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     };
 
     const navItems = [
-        { name: t('dashboard'), path: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGEMENT', 'OPERATIONS', 'BRANCH_MANAGER', 'BRANCH_SUPERVISOR', 'BRANCH_SALES'] },
-        { name: t('requests_tracker'), path: '/requests', icon: FileText, roles: ['ADMIN', 'MANAGEMENT', 'OPERATIONS', 'BRANCH_MANAGER', 'BRANCH_SUPERVISOR', 'BRANCH_SALES'] },
+        { name: t('dashboard'), path: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGEMENT', 'OPERATIONS', 'BRANCH_MANAGER', 'BRANCH_SUPERVISOR', 'BRANCH_SALES', 'BRANCH_MGMT', 'SALES_MGMT'] },
+        { name: t('requests_tracker'), path: '/requests', icon: FileText, roles: ['ADMIN', 'MANAGEMENT', 'OPERATIONS', 'BRANCH_MANAGER', 'BRANCH_SUPERVISOR', 'BRANCH_SALES', 'BRANCH_MGMT', 'SALES_MGMT'] },
         { name: t('new_request'), path: '/submit', icon: PlusCircle, roles: ['ADMIN', 'BRANCH_SALES'] },
+        { name: 'بواليص الشحن', path: '/batches', icon: Package, roles: ['ADMIN', 'MANAGEMENT', 'OPERATIONS', 'BRANCH_MANAGER', 'BRANCH_SUPERVISOR', 'BRANCH_SALES', 'BRANCH_MGMT'] },
+        { name: 'إرسال مستندات', path: '/shipment', icon: Send, roles: ['ADMIN', 'BRANCH_SALES', 'BRANCH_SUPERVISOR', 'BRANCH_MANAGER'] },
         { name: 'إدارة النظام', path: '/admin', icon: Settings, roles: ['ADMIN'] },
-        { name: 'الملف الشخصي', path: '/profile', icon: UserCircle, roles: ['ADMIN', 'MANAGEMENT', 'OPERATIONS', 'BRANCH_MANAGER', 'BRANCH_SUPERVISOR', 'BRANCH_SALES'] },
+        { name: 'الملف الشخصي', path: '/profile', icon: UserCircle, roles: ['ADMIN', 'MANAGEMENT', 'OPERATIONS', 'BRANCH_MANAGER', 'BRANCH_SUPERVISOR', 'BRANCH_SALES', 'BRANCH_MGMT', 'SALES_MGMT'] },
     ];
 
     const filteredNav = navItems.filter(item => item.roles.includes(user?.role || ''));
@@ -102,8 +107,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                             </>
                         )}
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="text-left ml-2 hidden sm:block">
+                    <div className="flex items-center gap-4">
+                        <NotificationBell />
+                        
+                        <div className="text-left ml-2 hidden sm:block border-r border-slate-200 pr-4">
                             <p className="text-sm font-medium text-slate-900 leading-tight">{user?.fullName}</p>
                             <p className="text-xs text-slate-500">{user?.role}</p>
                         </div>

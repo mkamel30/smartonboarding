@@ -13,6 +13,8 @@ enum UserRole {
   BRANCH_SALES
   BRANCH_SUPERVISOR
   BRANCH_MANAGER
+  BRANCH_MGMT          // إدارة الفروع (المركزية)
+  SALES_MGMT           // إدارة المبيعات
   OPERATIONS
   MANAGEMENT
 }
@@ -31,6 +33,7 @@ model Branch {
 
   users       User[]
   requests    OnboardingRequest[]
+  batches     ShipmentBatch[]
 }
 
 // ────────── المستخدمون ──────────
@@ -52,8 +55,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  createdRequests  OnboardingRequest[] @relation("CreatedBy")
-  historyEntries   StageHistory[]      @relation("ChangedByUser")
+  createdRequests   OnboardingRequest[] @relation("CreatedBy")
+  historyEntries    StageHistory[]      @relation("ChangedByUser")
+  notifications     Notification[]
+  sentBatches       ShipmentBatch[]     @relation("BatchSender")
+  receivedBatches   ShipmentBatch[]     @relation("BatchReceiver")
 }
 
 // ────────── طلبات التهيئة ──────────
@@ -97,10 +103,41 @@ model OnboardingRequest {
   createdBy            User     @relation("CreatedBy", fields: [createdById], references: [id])
 
   // Workflow
-  stage                String   @default("Supervisor Review")
+  stage                String   @default("Branch Management Review")
   status               String   @default("Pending")
   assignedTo           String   @default("System")
-  ownerRole            String   @default("BRANCH_SUPERVISOR")
+  ownerRole            String   @default("BRANCH_MGMT")
+
+  // نوع KYC (يحدده إدارة الفروع)
+  kycType              String?  // "KYC" | "LKYC"
+
+  // تتبع مراحل الموافقة
+  branchMgmtApprovedAt DateTime?
+  branchMgmtApprovedBy String?
+  salesMgmtApprovedAt  DateTime?
+  salesMgmtApprovedBy  String?
+  salesMgmtFormFileId  String?   // ملف النموذج الموقع والمختوم من إدارة المبيعات
+
+  // تتبع البنك
+  sentToBankAt         DateTime?
+  bankResponseAt       DateTime?
+  bankResponse         String?   // "approved" | "rejected" | "modification"
+
+  // تأكيد التشغيل
+  softwareActivated    Boolean  @default(false)
+  activatedAt          DateTime?
+  activatedById        String?
+
+  // باتش الشحن
+  shipmentBatchId      String?
+  shipmentBatch        ShipmentBatch? @relation(fields: [shipmentBatchId], references: [id])
+  documentsSentAt      DateTime?
+  waybillNumber        String?
+  documentsReceivedAt  DateTime?
+  documentsReceivedBy  String?
+
+  // مرحلة الإرجاع (لتحديد وجهة العودة بعد التعديل)
+  returnToStage        String?   // المرحلة التي يرجع إليها بعد تعديل الفرع
 
   // SLA
   slaStartDate         DateTime @default(now())
@@ -116,6 +153,50 @@ model OnboardingRequest {
   updatedAt            DateTime @updatedAt
 
   history              StageHistory[]
+  notifications        Notification[]
+}
+
+// ────────── باتشات شحن المستندات ──────────
+model ShipmentBatch {
+  id              String   @id @default(cuid())
+  batchNumber     String   @unique          // رقم تسلسلي للباتش
+  waybillNumber   String                    // رقم بوليصة الشحن
+  waybillFileId   String?                   // scan البوليصة على Drive
+  waybillFolderId String?                   // فولدر البواليص على Drive
+
+  senderBranchId  String
+  senderBranch    Branch   @relation(fields: [senderBranchId], references: [id])
+  senderUserId    String
+  senderUser      User     @relation("BatchSender", fields: [senderUserId], references: [id])
+
+  receivedAt      DateTime?
+  receivedById    String?
+  receivedBy      User?    @relation("BatchReceiver", fields: [receivedById], references: [id])
+
+  status          String   @default("Shipped") // "Shipped" | "Received"
+  notes           String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  requests        OnboardingRequest[]
+}
+
+// ────────── التنبيهات ──────────
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  type        String   // نوع التنبيه
+  title       String
+  message     String
+
+  requestId   String?
+  request     OnboardingRequest? @relation(fields: [requestId], references: [id])
+
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
 }
 
 // ────────── سجل التدقيق ──────────
