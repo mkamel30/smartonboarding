@@ -46,7 +46,7 @@ export async function processAction(
             
             if (action === 'approve') {
                 updates.stage = WORKFLOW_STAGES.BRANCH_MGMT_REVIEW;
-                updates.ownerRole = ROLES.BRANCH_MGMT;
+                updates.ownerRole = ROLES.OPERATIONS;
                 updates.status = 'Submitted';
                 historyEntry.toStage = updates.stage;
                 historyEntry.status = 'Approved by Branch Supervisor';
@@ -65,7 +65,7 @@ export async function processAction(
             break;
 
         case WORKFLOW_STAGES.BRANCH_MGMT_REVIEW:
-            if (user.role !== ROLES.BRANCH_MGMT && user.role !== 'ADMIN') throw new Error('Unauthorized');
+            if (user.role !== ROLES.OPERATIONS && user.role !== ROLES.BRANCH_MGMT && user.role !== 'ADMIN') throw new Error('Unauthorized');
             
             if (action === 'approve') {
                 if (!kycType) throw new Error('KYC Type is required for approval');

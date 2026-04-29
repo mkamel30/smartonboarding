@@ -326,21 +326,23 @@ const RequestDetailsPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Financial Section */}
-                            <div className="bg-blue-600 p-8 rounded-3xl shadow-lg shadow-blue-100 text-white overflow-hidden relative">
+                             {/* Financial Section */}
+                            <div className="bg-blue-600 p-6 sm:p-8 rounded-3xl shadow-lg shadow-blue-100 text-white overflow-hidden relative">
                                 <div className="absolute -top-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
                                 <h3 className="text-xl font-extrabold mb-8 flex items-center gap-3">
                                     <span className="w-1.5 h-6 bg-white rounded-full" />
                                     البيانات البنكية
                                 </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 relative z-10">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 relative z-10">
                                     <div className="space-y-2">
-                                        <p className="text-xs font-bold uppercase tracking-widest text-blue-200">رقم الحساب (IBAN)</p>
-                                        <p className="text-2xl font-mono font-bold tracking-tight">{request.iban || '---'}</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-200">رقم الحساب (IBAN)</p>
+                                        <p className="text-lg sm:text-xl md:text-2xl font-mono font-bold tracking-tight break-all">
+                                            {request.iban || '---'}
+                                        </p>
                                     </div>
                                     <div className="space-y-2">
-                                        <p className="text-xs font-bold uppercase tracking-widest text-blue-200">البنك</p>
-                                        <p className="text-2xl font-bold">{request.bankName || '---'}</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-200">البنك</p>
+                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">{request.bankName || '---'}</p>
                                     </div>
                                 </div>
                             </div>
@@ -557,7 +559,7 @@ const RequestDetailsPage: React.FC = () => {
                                 )}
 
                                 {/* --- 2. BRANCH MGMT REVIEW --- */}
-                                {(user?.role === 'BRANCH_MGMT' || user?.role === 'ADMIN') && request.stage === 'Branch Management Review' && (
+                                {(user?.role === 'OPERATIONS' || user?.role === 'BRANCH_MGMT' || user?.role === 'ADMIN') && request.stage === 'Branch Management Review' && (
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-xs font-bold uppercase text-slate-400 mb-2">نوع التوثيق المطلق (إلزامي للموافقة)</label>
