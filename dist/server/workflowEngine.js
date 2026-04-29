@@ -36,7 +36,7 @@ export async function processAction(requestId, action, user, payload = {}) {
                 throw new Error('Unauthorized');
             if (action === 'approve') {
                 updates.stage = WORKFLOW_STAGES.BRANCH_MGMT_REVIEW;
-                updates.ownerRole = ROLES.OPERATIONS;
+                updates.ownerRole = ROLES.BRANCH_MGMT;
                 updates.status = 'Submitted';
                 historyEntry.toStage = updates.stage;
                 historyEntry.status = 'Approved by Branch Supervisor';
@@ -56,7 +56,7 @@ export async function processAction(requestId, action, user, payload = {}) {
             }
             break;
         case WORKFLOW_STAGES.BRANCH_MGMT_REVIEW:
-            if (user.role !== ROLES.OPERATIONS && user.role !== ROLES.BRANCH_MGMT && user.role !== 'ADMIN')
+            if (user.role !== ROLES.BRANCH_MGMT && user.role !== 'ADMIN')
                 throw new Error('Unauthorized');
             if (action === 'approve') {
                 if (!kycType)

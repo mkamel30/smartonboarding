@@ -131,7 +131,7 @@ const RequestDetailsPage: React.FC = () => {
         }
     });
 
-    if (isLoading || !request) return <div className="p-12 flex items-center justify-center"><Loader2 className="animate-spin text-blue-500" /></div>;
+    if (isLoading || !request) return <div className="p-12 flex items-center justify-center"><Loader2 className="animate-spin text-blue-50" /></div>;
 
     const { remainingDays, isBreached } = calculateSLA(request.slaStartDate, request.slaTargetDays);
 
@@ -163,18 +163,31 @@ const RequestDetailsPage: React.FC = () => {
         return map[status] || status;
     };
 
+    const roleTranslations: any = {
+        'ADMIN': 'مدير نظام',
+        'BRANCH_SALES': 'مسؤول مبيعات',
+        'BRANCH_SUPERVISOR': 'مشرف الفرع',
+        'BRANCH_MANAGER': 'مدير فرع',
+        'BRANCH_MGMT': 'إدارة الفروع',
+        'SALES_MGMT': 'إدارة المبيعات',
+        'OPERATIONS': 'إدارة العمليات',
+        'MANAGEMENT': 'الإدارة العليا'
+    };
+
+    const stageTranslations: any = {
+        'Branch Submission': 'تقديم الفرع',
+        'Supervisor Review': 'مراجعة مشرف الفرع',
+        'Branch Management Review': 'مراجعة إدارة الفروع',
+        'Sales Management Review': 'مراجعة إدارة المبيعات',
+        'Operations Review': 'مراجعة إدارة العمليات',
+        'Bank Review': 'مراجعة البنك',
+        'Software Activation': 'تفعيل السوفتوير',
+        'Completed': 'مكتمل',
+        'Closed': 'مغلق'
+    };
+
     const translateStage = (stage: string) => {
-        const map: any = {
-            'Branch Submission': 'تقديم الفرع',
-            'Branch Management Review': 'مراجعة إدارة الفروع',
-            'Sales Management Review': 'مراجعة إدارة المبيعات',
-            'Operations Review': 'مراجعة إدارة الفروع',
-            'Bank Review': 'مراجعة البنك',
-            'Software Activation': 'تفعيل السوفتوير',
-            'Completed': 'مكتمل',
-            'Closed': 'مغلق'
-        };
-        return map[stage] || stage;
+        return stageTranslations[stage] || stage;
     };
 
     return (
@@ -220,7 +233,6 @@ const RequestDetailsPage: React.FC = () => {
                         المرحلة: {translateStage(request.stage)}
                     </div>
                     
-                    {/* Consolidated Export Menu */}
                     <div className="relative mt-2">
                         <button 
                             onClick={() => setShowExportMenu(!showExportMenu)}
@@ -283,7 +295,6 @@ const RequestDetailsPage: React.FC = () => {
                 <div className="lg:col-span-2 space-y-8">
                     {activeTab === 'overview' && (
                         <div className="space-y-8">
-                            {/* Merchant & Contact Section */}
                             <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
                                 <h3 className="text-xl font-extrabold mb-8 flex items-center gap-3 text-slate-800">
                                     <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
@@ -305,7 +316,6 @@ const RequestDetailsPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Identity and Legal Section */}
                             <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
                                 <h3 className="text-xl font-extrabold mb-8 flex items-center gap-3 text-slate-800">
                                     <span className="w-1.5 h-6 bg-amber-500 rounded-full" />
@@ -326,7 +336,6 @@ const RequestDetailsPage: React.FC = () => {
                                 </div>
                             </div>
 
-                             {/* Financial Section */}
                             <div className="bg-blue-600 p-6 sm:p-8 rounded-3xl shadow-lg shadow-blue-100 text-white overflow-hidden relative">
                                 <div className="absolute -top-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
                                 <h3 className="text-xl font-extrabold mb-8 flex items-center gap-3">
@@ -347,7 +356,6 @@ const RequestDetailsPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Technical & Operational Section */}
                             <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
                                 <h3 className="text-xl font-extrabold mb-8 flex items-center gap-3 text-slate-800">
                                     <span className="w-1.5 h-6 bg-green-500 rounded-full" />
@@ -427,7 +435,6 @@ const RequestDetailsPage: React.FC = () => {
                                 </div>
                             )}
 
-                            {/* Shipping Information */}
                             {request.waybillNumber && (
                                 <div className="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
                                     <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -436,10 +443,6 @@ const RequestDetailsPage: React.FC = () => {
                                     </h4>
                                     <div className="grid grid-cols-2 gap-4 text-sm">
                                         <div>
-                                            <span className="text-slate-500 block mb-1">رقم الباتش</span>
-                                            <span className="font-bold">{request.shipmentBatch?.batchNumber || '---'}</span>
-                                        </div>
-                                        <div>
                                             <span className="text-slate-500 block mb-1">بوليصة الشحن</span>
                                             <span className="font-bold">{request.waybillNumber}</span>
                                         </div>
@@ -447,7 +450,7 @@ const RequestDetailsPage: React.FC = () => {
                                             <span className="text-slate-500 block mb-1">تاريخ الإرسال</span>
                                             <span className="font-bold">{request.documentsSentAt ? format(new Date(request.documentsSentAt), 'yyyy-MM-dd') : '---'}</span>
                                         </div>
-                                        <div>
+                                        <div className="col-span-2">
                                             <span className="text-slate-500 block mb-1">حالة الاستلام</span>
                                             <span className={`font-bold ${request.documentsReceivedAt ? 'text-green-600' : 'text-amber-500'}`}>
                                                 {request.documentsReceivedAt ? 'تم الاستلام' : 'قيد الشحن'}
@@ -462,54 +465,41 @@ const RequestDetailsPage: React.FC = () => {
                     {activeTab === 'history' && (
                         <div className="bg-white p-10 rounded-3xl shadow-sm border border-slate-200">
                             <h3 className="text-xl font-extrabold text-slate-900 mb-10">سجل عمليات التدقيق والمراحل</h3>
-                            <div className="relative space-y-12 before:absolute before:right-[22px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-blue-500/20 before:via-slate-100 before:to-slate-50">
-                                {request.history.map((item, idx) => {
-                                    const StatusIcon = 
-                                        ['Activated', 'Completed'].includes(item.status) ? CheckCircle :
-                                        item.status === 'Rejected' ? XCircle :
-                                        item.status === 'Returned' ? RotateCw :
-                                        item.status === 'Submitted' ? ArrowRight : Info;
-                                    
-                                    const statusColors: any = {
-                                        'Activated': 'bg-green-100 text-green-600 border-green-200',
-                                        'Completed': 'bg-green-100 text-green-600 border-green-200',
-                                        'Rejected': 'bg-red-100 text-red-600 border-red-200',
-                                        'Returned': 'bg-amber-100 text-amber-600 border-amber-200',
-                                        'Submitted': 'bg-blue-100 text-blue-600 border-blue-200',
-                                        'Pending': 'bg-slate-100 text-slate-600 border-slate-200'
-                                    };
-
-                                    return (
-                                        <div key={idx} className="relative pr-16 animate-in fade-in slide-in-from-right-4 duration-500">
-                                            <div className={`absolute right-0 top-0 w-11 h-11 rounded-2xl border-4 border-white shadow-sm flex items-center justify-center z-10 ${statusColors[item.status] || 'bg-slate-100 text-slate-600'}`}>
-                                                <StatusIcon size={20} className={item.status === 'Returned' ? 'rtl-flip' : ''} />
-                                            </div>
-
-                                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 mb-3">
+                            <div className="space-y-6 relative before:absolute before:right-4 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+                                {request.history?.map((entry: any, index: number) => (
+                                    <div key={index} className="relative pr-12 animate-in fade-in slide-in-from-right duration-300" style={{ animationDelay: `${index * 100}ms` }}>
+                                        <div className={`absolute right-0 top-1 w-8 h-8 rounded-full flex items-center justify-center z-10 shadow-sm ${index === 0 ? 'bg-blue-600 text-white ring-4 ring-blue-50' : 'bg-white text-slate-400 border border-slate-200'}`}>
+                                            {index === 0 ? <div className="w-2 h-2 bg-white rounded-full animate-pulse" /> : <div className="w-1.5 h-1.5 bg-slate-300 rounded-full" />}
+                                        </div>
+                                        <div className={`p-5 rounded-2xl border transition-all ${index === 0 ? 'bg-white border-blue-100 shadow-md shadow-blue-50/50' : 'bg-slate-50/50 border-slate-100'}`}>
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                                                 <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-lg font-extrabold text-slate-900">{item.status} - {translateStage(item.toStage || '')}</span>
-                                                    </div>
-                                                    <p className="text-sm font-bold text-slate-600 flex items-center gap-1.5">
-                                                        <UserIcon size={14} className="text-slate-400" /> {item.changedByUser?.fullName || 'System'} ({item.changedByUser?.role || 'SYSTEM'})
-                                                    </p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="block text-xs font-bold text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
-                                                        {format(new Date(item.createdAt), 'dd/MM/yyyy HH:mm')}
+                                                    <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${index === 0 ? 'bg-blue-50 text-blue-600' : 'bg-slate-200 text-slate-600'}`}>
+                                                        {stageTranslations[entry.toStage] || entry.status}
                                                     </span>
+                                                    <div className="mt-2 flex items-center gap-2">
+                                                        <div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                                            {entry.changedByUser?.fullName?.charAt(0) || '?'}
+                                                        </div>
+                                                        <span className="text-sm font-bold text-slate-800">{entry.changedByUser?.fullName || 'النظام'}</span>
+                                                        <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-bold">
+                                                            {roleTranslations[entry.changedByUser?.role] || entry.changedByUser?.role || 'إدارة النظام'}
+                                                        </span>
+                                                    </div>
                                                 </div>
+                                                <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-100">
+                                                    <Clock size={10} />
+                                                    {format(new Date(entry.createdAt), 'dd/MM/yyyy HH:mm')}
+                                                </span>
                                             </div>
-
-                                            {item.comment && (
-                                                <div className="bg-slate-50/80 p-5 rounded-2xl text-slate-600 leading-relaxed border border-slate-100/50 relative overflow-hidden group">
-                                                    <div className="absolute top-0 right-0 w-1 h-full bg-blue-500/20 group-hover:bg-blue-500 transition-colors" />
-                                                    <p className="italic font-medium pr-1">"{item.comment}"</p>
+                                            {entry.comment && (
+                                                <div className="text-sm text-slate-600 bg-white/50 p-3 rounded-xl border border-slate-100/50 italic leading-relaxed">
+                                                    "{entry.comment}"
                                                 </div>
                                             )}
                                         </div>
-                                    );
-                                })}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
@@ -541,7 +531,6 @@ const RequestDetailsPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* --- 1. SUPERVISOR REVIEW --- */}
                                 {(user?.role === 'BRANCH_SUPERVISOR' || user?.role === 'BRANCH_MANAGER' || user?.role === 'ADMIN') && request.stage === 'Supervisor Review' && (
                                     <div className="space-y-4">
                                         <button
@@ -558,7 +547,6 @@ const RequestDetailsPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* --- 2. BRANCH MGMT REVIEW --- */}
                                 {(user?.role === 'OPERATIONS' || user?.role === 'BRANCH_MGMT' || user?.role === 'ADMIN') && request.stage === 'Branch Management Review' && (
                                     <div className="space-y-4">
                                         <div>
@@ -587,7 +575,6 @@ const RequestDetailsPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* --- 2. SALES MGMT REVIEW --- */}
                                 {(user?.role === 'SALES_MGMT' || user?.role === 'ADMIN') && request.stage === 'Sales Management Review' && (
                                     <div className="space-y-4">
                                         <div className="p-4 bg-slate-800 rounded-xl border border-slate-700">
@@ -611,7 +598,6 @@ const RequestDetailsPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* --- 3. OPERATIONS REVIEW --- */}
                                 {(user?.role === 'OPERATIONS' || user?.role === 'ADMIN') && request.stage === 'Operations Review' && (
                                     <div className="space-y-4">
                                         <button onClick={() => doAction('send_to_bank')} disabled={actionMutation.isPending} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2"><ArrowRight size={20} className="rtl-flip" /> إرسال للبنك</button>
@@ -619,7 +605,6 @@ const RequestDetailsPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* --- 4. BANK REVIEW (By Operations) --- */}
                                 {(user?.role === 'OPERATIONS' || user?.role === 'ADMIN') && request.stage === 'Bank Review' && (
                                     <div className="space-y-4">
                                         <div>
@@ -634,7 +619,6 @@ const RequestDetailsPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* --- 5. SOFTWARE ACTIVATION (By Branch Sales) --- */}
                                 {(user?.role === 'BRANCH_SALES' || user?.role === 'ADMIN') && request.stage === 'Software Activation' && (
                                     <div className="space-y-4">
                                         <div className="p-4 bg-green-900/30 border border-green-500/20 rounded-xl text-green-400 text-sm mb-4">
@@ -644,7 +628,6 @@ const RequestDetailsPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* --- 6. RESUBMISSION (Branch Sales) --- */}
                                 {(user?.role === 'BRANCH_SALES' || user?.role === 'ADMIN') && request.status === 'Returned' && (
                                     <div className="space-y-4">
                                         <div className="p-4 bg-blue-600/10 border border-blue-600/20 rounded-2xl text-blue-400 text-sm">
@@ -664,7 +647,6 @@ const RequestDetailsPage: React.FC = () => {
                         )}
                     </div>
 
-                    {/* SLA Card */}
                     <div className="bg-white p-6 rounded-3xl border border-slate-200 no-print">
                         <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
                             <Clock size={18} className="text-blue-500" />

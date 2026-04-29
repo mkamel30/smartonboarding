@@ -396,8 +396,9 @@ const AdminPage: React.FC = () => {
                                         <option value="BRANCH_SALES">مسؤول مبيعات (Sales)</option>
                                         <option value="BRANCH_SUPERVISOR">مشرف الفرع (Supervisor)</option>
                                         <option value="BRANCH_MANAGER">مدير الفرع (Branch Manager)</option>
-                                        <option value="OPERATIONS">إدارة الفروع (Branches Management)</option>
+                                        <option value="BRANCH_MGMT">إدارة الفروع (Branches Management)</option>
                                         <option value="SALES_MGMT">إدارة المبيعات (Sales Management)</option>
+                                        <option value="OPERATIONS">إدارة العمليات (OPS Management)</option>
                                         <option value="MANAGEMENT">الإدارة العليا (Management)</option>
                                     </select>
                                 </div>
